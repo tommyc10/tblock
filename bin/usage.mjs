@@ -5,6 +5,12 @@ import { join } from 'node:path';
 export const emptyUsage = () => ({ input: 0, output: 0, cacheRead: 0, cacheWrite5m: 0, cacheWrite1h: 0 });
 export const tokensOf = (u) => u.input + u.output + u.cacheRead + u.cacheWrite5m + u.cacheWrite1h;
 
+// Share of the prompt served from cache. Output is never cached, so it is left out.
+export const cacheHit = (u) => {
+  const prompt = u.input + u.cacheRead + u.cacheWrite5m + u.cacheWrite1h;
+  return prompt ? u.cacheRead / prompt : null;
+};
+
 export function addUsage(into, more) {
   for (const key of Object.keys(into)) into[key] += more[key] || 0;
   return into;

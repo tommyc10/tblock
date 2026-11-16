@@ -1,6 +1,6 @@
 # tblock cli
 
-a small node cli at `bin/tblock.mjs`, with no dependencies. add `--json` to most commands for output a script or agent can read. colour appears only in a terminal: `NO_COLOR` turns it off, and `FORCE_COLOR=1` keeps it on when piping.
+a small node cli at `bin/tblock.mjs`, with no dependencies. add `--json` to most commands for output a script or agent can read. a flag's value can follow an `=` or a space, so `--since=today` and `--since today` are the same. colour appears only in a terminal: `NO_COLOR` turns it off, and `FORCE_COLOR=1` keeps it on when piping.
 
 ## the `tblock` command
 
@@ -56,12 +56,13 @@ turns on the two hooks the plugin ships. the harness then asks you before an age
 
 ### `tblock watch`
 
-a live view of the newest claude code or copilot session (cli, or vs code's agents window).
+a live view of the newest claude code or copilot session (cli, or vs code's agents window), laid out the way claude code shows a conversation.
 
 - **what it shows:**
-  - the main agent;
+  - a header box with the folder, branch, main model, a context gauge, the cost and how long it has run;
+  - earlier tasks, one line each, and the latest task's steps: `⏺ Tool(target)` with its result under `⎿`, and no timestamps. `⏎` on a step shows its time, full command and output;
+  - a `✻ Working…` line while the agent works, or the question it's waiting on when it's your turn;
   - each subagent with its model and effort, and whether the role's model was honoured;
-  - every tool call grouped by the prompt it served;
   - the files changed, with lines added and removed. a `git now` line gives git's own count, which catches changes made through the shell.
 - **flags:** failed tools say why. it also flags three failures in a row, a session quiet for three minutes, and rate limits.
 - **context and cost:** context shows as a gauge against the model's window, and claude models get an estimated cost.
@@ -80,7 +81,7 @@ a live view of the newest claude code or copilot session (cli, or vs code's agen
 | `?` | every key |
 | `q` | quit |
 
-`--replay[=<id prefix>]` plays a recorded session back (space pauses, `←` `→` seek, `[` `]` jump prompts, `+` `-` speed). `--session=<id prefix>` pins one session, and `--once` prints a snapshot. preview it with `node bin/fixtures/watch-demo.mjs`.
+`--replay[=<id prefix>]` plays a recorded session back (space pauses, `←` `→` seek, `[` `]` jump prompts, `+` `-` speed). `--session=<id prefix>` pins one session, and `--once` prints a snapshot: the screen you'd see live in a terminal, and every task's steps when piped to a file or an agent. preview it with `node bin/fixtures/watch-demo.mjs`.
 
 ### `tblock log`
 
@@ -90,6 +91,20 @@ what every claude code and copilot session did since yesterday, for a standup or
 - `--here` keeps only the current repo
 
 dollars are api list prices from `pricing.json`; override a model in `~/.tblock/pricing.json`. copilot shows premium requests, which is what it bills.
+
+### `tblock usage`
+
+where your tokens went, across every claude code and copilot session: one row per day for the last 7 days, with tokens, the cache hit, the subagents' share and the list-price cost, and a bar to compare rows. a session that runs past midnight counts each day's tokens on that day.
+
+- `--by=project`, `--by=model` or `--by=session` groups another way. sessions show the 15 costliest
+- `--since=30d`, `--since=monday` or a date widens it
+- `--here` keeps only the current repo
+
+the total splits tokens into input, output, cache read and cache write. a big total with a high cache hit is mostly cache reads, which cost about a tenth of fresh input. dollars are api list prices, as for `tblock log`.
+
+### `tblock statusline`
+
+one line for claude code's status bar: the model, this session's tokens, its cache hit and cost, and today's cost across every session. `tblock statusline on` sets `statusLine` in `~/.claude/settings.json` to run it through the `tblock` launcher, so it follows updates, and `off` removes it. it never replaces a status line tblock didn't write. to keep your own, call `~/.tblock/bin/tblock statusline` from your script, passing claude code's input through.
 
 ### `tblock handoff`
 

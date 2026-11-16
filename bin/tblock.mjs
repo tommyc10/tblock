@@ -12,6 +12,8 @@ import { addToPath, binDir, launcherTarget, onPath, refreshLauncher, removeFromP
 import { log } from './log.mjs';
 import { HARNESSES, HARNESS_NAME, emptyFile, formatEntry, formatRoles, parseEntry, readRoles, rolesPath, runsInClaudeCode, section } from './roles.mjs';
 import { createUI } from './ui.mjs';
+import { setStatusLine, statusLine } from './statusline.mjs';
+import { usageCommand } from './usage-report.mjs';
 import { loadPrices } from './usage.mjs';
 import { watch } from './watch.mjs';
 
@@ -23,7 +25,14 @@ const AGENTS_DIR = join(COPILOT_HOME, 'agents');
 const SETTINGS_FILE = join(COPILOT_HOME, 'settings.json');
 const PRESETS = JSON.parse(readFileSync(join(PLUGIN, 'presets.json'), 'utf8'));
 
-const argv = process.argv.slice(2);
+// `--since today` reads as `--since=today`, the way most CLIs take a value. --replay's value is optional, so it stays out.
+const VALUED = new Set(['--since', '--by', '--session', '--out', '--harness', '--from', '--tools', '--effort']);
+const argv = process.argv.slice(2).reduce((out, arg, i, all) => {
+  if (out.skip) return { ...out, skip: false };
+  const next = all[i + 1];
+  if (VALUED.has(arg) && next !== undefined && !next.startsWith('--')) return { list: [...out.list, `${arg}=${next}`], skip: true };
+  return { list: [...out.list, arg], skip: false };
+}, { list: [], skip: false }).list;
 const json = argv.includes('--json');
 // --from=<text> hands model names to `models` and `tiers detect` when VS Code's state is out of reach.
 const fromText = argv.find((a) => a.startsWith('--from='))?.slice('--from='.length);
@@ -640,7 +649,7 @@ function showRoles() {
   const file = readRolesFile();
   if (json) return console.log(JSON.stringify(file ? { ...file.meta, harnesses: file.harnesses } : null, null, 2));
   process.stdout.write(ui.header('roles'));
-  if (!file) return say(ui.status('SKIP', 'No roles yet', 'every subagent runs on the session model', 0), '', ui.hint('/setup-tblock'));
+  if (!file) return say(ui.status('SKIP', 'No roles yet', 'every subagent runs on the session model'), '', ui.hint('/setup-tblock'));
   printRoles(file);
 }
 
@@ -886,6 +895,11 @@ const COMMANDS = [
     ['handoff', "a brief of this repo's newest session, for another session or harness to pick up"],
     ['handoff --session=<id>', 'brief one session by id prefix; --out=<file> writes it to a file'],
   ]],
+  ['usage', [
+    ['usage', 'tokens and cost per day for the last 7 days: cache hit, subagent share, a bar per day'],
+    ['usage --by=project', 'group by day, project, model, or session; --since=30d widens it, --here keeps this repo'],
+    ['statusline on', "show this session's tokens and cost, and today's, in Claude Code's status bar (off undoes it)"],
+  ]],
 ];
 
 const FLAGS = [
@@ -906,6 +920,25 @@ function showHelp() {
   say(ui.section('flags'));
   for (const [flag, what] of FLAGS) say(`  ${ui.pad(ui.accent(flag), commandWidth)}${ui.dim(what)}`);
   say('', ui.dim('  NO_COLOR=1 prints plain text.  tblock --version prints the version.'), '');
+}
+
+// The closest command by edit distance, when it's near enough to be a typo.
+function nearest(word, words) {
+  const distance = (a, b) => {
+    const row = Array.from({ length: b.length + 1 }, (_, j) => j);
+    for (let i = 1; i <= a.length; i++) {
+      let prev = row[0];
+      row[0] = i;
+      for (let j = 1; j <= b.length; j++) {
+        const keep = row[j];
+        row[j] = Math.min(row[j] + 1, row[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1));
+        prev = keep;
+      }
+    }
+    return row[b.length];
+  };
+  const [best] = words.map((w) => [w, distance(String(word), w)]).sort((x, y) => x[1] - y[1]);
+  return best && best[1] <= Math.max(1, Math.ceil(best[0].length / 3)) ? best[0] : null;
 }
 
 const [command, sub, ...rest] = args;
@@ -971,10 +1004,30 @@ try {
   } else if (command === 'log') {
     if (!json) process.stdout.write(ui.header('log'));
     process.stdout.write(log({ ui, json, flags: args.slice(1), cwd: process.cwd(), prices: loadPrices(PLUGIN, homedir()), ...homes }));
+  } else if (command === 'usage') {
+    if (!json) process.stdout.write(ui.header('usage'));
+    process.stdout.write(usageCommand({ ui, json, flags: args.slice(1), cwd: process.cwd(), prices: loadPrices(PLUGIN, homedir()), ...homes }));
+  } else if (command === 'statusline' && !sub) {
+    let input = {};
+    try { input = JSON.parse(readFileSync(0, 'utf8') || '{}'); } catch { /* a bare run still prints today's spend */ }
+    // Claude Code shows ANSI colour in the status bar but runs this without a terminal.
+    const bar = createUI({ color: !('NO_COLOR' in process.env), version: VERSION });
+    console.log(statusLine({ input, ui: bar, prices: loadPrices(PLUGIN, homedir()), ...homes }));
+  } else if (command === 'statusline') {
+    if (sub !== 'on' && sub !== 'off') throw new Error(`statusline takes on or off, not "${sub}"`);
+    if (sub === 'on') refreshLauncher(homedir(), PLUGIN);
+    const result = setStatusLine(sub, { claudeHome: homes.claudeHome, home: homedir() });
+    if (json) console.log(JSON.stringify(result));
+    else {
+      process.stdout.write(ui.header('statusline'));
+      say(ui.status(result.on ? 'PASS' : 'SKIP', 'Status line', result.on ? `on, in ${result.file}` : result.changed ? `off, removed from ${result.file}` : 'was not on'), '');
+      say(ui.hint(`tblock statusline ${result.on ? 'off' : 'on'}`), ui.dim('    new Claude Code sessions pick it up'));
+    }
   } else if (command === 'handoff') {
     process.stdout.write(handoff({ json, flags: args.slice(1), cwd: process.cwd(), ...homes }));
   } else {
-    throw new Error(`unknown command "${args.join(' ')}". Run tblock help to see the commands.`);
+    const guess = nearest(command, ['help', 'doctor', 'watch', 'roles', 'models', 'tiers', 'preset', 'guard', 'command', 'log', 'handoff', 'usage', 'statusline']);
+    throw new Error(`unknown command "${args.join(' ')}".${guess ? ` Did you mean tblock ${guess}?` : ''} Run tblock help to see the commands.`);
   }
 } catch (error) {
   console.error(ui.error(error.message, wantsColor(process.stderr)));

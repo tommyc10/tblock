@@ -442,9 +442,10 @@ export function foldSteps(entries) {
 }
 
 // The folded steps of one task, without the prompt itself. The story keeps what was said, who was
-// spawned, and what broke, and drops the tool calls between them.
+// spawned, and what broke, and drops the tool calls between them. A subagent's closing words open
+// from its done step, so they aren't a step of their own.
 const STORY = new Set(['say', 'agent', 'done', 'fail', 'note']);
-export const stepsOf = (state, i, story = false) => foldSteps(state.activity.filter((a) => a.task === i && a.kind !== 'you' && (!story || STORY.has(a.kind))));
+export const stepsOf = (state, i, story = false) => foldSteps(state.activity.filter((a) => a.task === i && a.kind !== 'you' && !(a.kind === 'say' && a.agent !== 'main') && (!story || STORY.has(a.kind))));
 
 // The steps the cursor can move through: the latest task's, or every task's when they are all open.
 export function selectable(state, expand, story = false) {
@@ -512,25 +513,6 @@ function lane(ui, a, t0, t1, n, now) {
   return `${ui.dim('·'.repeat(from))}${ui.tone(tone, bar)}${ui.dim('·'.repeat(n - to))}`;
 }
 
-// A list of lines cut to `room`, keeping `focus` in view, with a marker for what was cut on each side.
-function windowed(items, room, focus, ui, indent, noun) {
-  if (items.length <= room) return items;
-  let take = room;
-  let start = 0;
-  for (let pass = 0; pass < 3; pass += 1) {
-    start = focus == null ? items.length - take : Math.min(Math.max(0, focus - Math.floor(take / 2)), items.length - take);
-    take = Math.max(1, room - (start > 0) - (start + take < items.length));
-  }
-  start = focus == null ? items.length - take : Math.min(Math.max(0, focus - Math.floor(take / 2)), items.length - take);
-  const above = start;
-  const below = items.length - start - take;
-  return [
-    ...(above ? [ui.dim(`${indent}↑ ${plural(above, `earlier ${noun}`)}`)] : []),
-    ...items.slice(start, start + take),
-    ...(below ? [ui.dim(`${indent}↓ ${plural(below, `later ${noun}`)}`)] : []),
-  ];
-}
-
 // Draws the whole screen as lines, fitted to the terminal. Narrow terminals stack the sections and give
 // the task feed what's left; from 150 columns the feed takes the left pane and the agents the right.
 // `tabs` lists the sessions the viewer can switch between; `view` is what's selected or open.
@@ -574,14 +556,37 @@ export function render(state, ui, opts = {}) {
     return limit ? `${gauge(ui, s.context / limit, n)}  ${ui.dim(parts)}` : ui.dim(`${parts} context`);
   };
 
-  // Header: wordmark, a live or ended badge (or the replay controls), how long the session has run.
+  // Header: one rounded box, the way Claude Code opens. The wordmark and a live, ended, or replay badge;
+  // where the session runs; then the model, the context it holds, the cost, and how long it has run.
   const head = [];
   const badge = replay ? ui.tone('info', `${replay.playing ? '▶' : '❚❚'} replay ${replay.speed}×`)
     : state.ended ? ui.dim('■ ended') : live ? ui.tone('ok', `${ui.color ? '●' : '*'} live`) : ui.dim('○ quiet');
-  const left = `  ${ui.bold(ui.color ? ui.tone('accent', 'tblock') : 'tblock')} ${ui.dim('›')} ${ui.bold('watch')}  ${badge}`;
-  const cost = state.cost >= 0.005 ? `≈ ${money(state.cost)}  ` : '';
-  const corner = ui.dim(`${cost}${replay ? clock(now) : span(elapsed)}${version ? `  v${version}` : ''}`);
-  head.push('', `${left}${' '.repeat(Math.max(2, width - stripLen(left) - stripLen(corner) - 2))}${corner}`);
+  const inner = Math.max(24, width - 4);
+  const edge = (t) => ui.dim(ui.tone('accent', t));
+  const boxed = (l) => {
+    const f = ui.fit(l, inner);
+    return `${edge('│')} ${f}${' '.repeat(Math.max(0, inner - stripLen(f)))} ${edge('│')}`;
+  };
+  const titleL = `${ui.tone('accent', '✻')} ${ui.bold('tblock watch')}`;
+  const titleR = `${badge}${version ? ui.dim(`  v${version}`) : ''}`;
+  // Copilot and Claude Code name an untitled session after its prompt, which the task feed shows.
+  const stem = (state.title || '').replace(/\s*(…|\.\.\.)$/, '').slice(0, 40);
+  const titled = state.title && !state.tasks.some((t) => (t.prompt || '').startsWith(stem));
+  const where = [state.harness === 'claude-code' ? 'Claude Code' : 'Copilot', titled && state.title, state.cwd && ui.tildify(state.cwd), state.branch && `⎇ ${state.branch}`].filter(Boolean).join('  ·  ');
+  const ctx = contextLine(state, Math.min(12, Math.max(6, inner - 70)));
+  const engine = [
+    state.model ? `${ui.model(state.model, FAMILY(state.model))}${state.auto ? ui.dim(' (auto)') : ''}${state.effort ? ` ${ui.effort(state.effort, { word: !ui.color })}` : ''}` : ui.dim('model unknown'),
+    ctx && `${ui.dim('context')}  ${ctx}`,
+    state.cost >= 0.005 && ui.bold(`≈ ${money(state.cost)}`),
+    ui.dim(replay ? clock(now) : span(elapsed) || '0s'),
+  ].filter(Boolean).join(ui.dim('  ·  '));
+  head.push(
+    edge(`╭${'─'.repeat(inner + 2)}╮`),
+    boxed(`${titleL}${' '.repeat(Math.max(2, inner - stripLen(titleL) - stripLen(titleR)))}${titleR}`),
+    boxed(ui.dim(where || state.id)),
+    boxed(engine),
+    edge(`╰${'─'.repeat(inner + 2)}╯`),
+  );
 
   // Session tabs: every live session with what it's doing, the one on screen highlighted.
   // Each tab is named for its folder, with what it was asked where there's room, and how long a
@@ -598,13 +603,10 @@ export function render(state, ui, opts = {}) {
     });
     for (let i = 0; i < cells.length; i += perRow) head.push(`  ${cells.slice(i, i + perRow).join('  ')}`.trimEnd());
   }
-  // Where it runs. Copilot and Claude Code name an untitled session after its prompt, which the task feed shows.
-  const stem = (state.title || '').replace(/\s*(…|\.\.\.)$/, '').slice(0, 40);
-  const titled = state.title && !state.tasks.some((t) => (t.prompt || '').startsWith(stem));
-  const where = [state.harness === 'claude-code' ? 'Claude Code' : 'Copilot', titled && state.title, state.cwd && ui.tildify(state.cwd), state.branch && `⎇ ${state.branch}`].filter(Boolean).join('  ·  ');
-  head.push(`  ${ui.dim(ui.clip(where || state.id, width - 4))}`, '');
+  head.push('');
 
-  // Footer: what's followed, counts, and the keys for the layer on screen; a replay shows its scrubber.
+  // Footer: the keys for the layer on screen on the left, a few facts and quit on the right; a replay
+  // shows its scrubber above it. A snapshot piped to an agent leaves the keys out.
   const footer = [];
   if (replay) {
     const n = Math.max(10, width - 30);
@@ -616,22 +618,24 @@ export function render(state, ui, opts = {}) {
   }
   const facts = [
     replay ? `replay ${state.id.slice(0, 8)}` : following && !once ? 'following new sessions' : `session ${state.id.slice(0, 8)}`,
-    view.story && 'story: tool calls hidden',
+    view.story && 'story',
     state.premium && `${state.premium} premium`,
     state.errors && plural(state.errors, 'error'),
   ].filter(Boolean);
-  // The hints that drop first on a narrow terminal sit at the end; ? lists every key.
-  const keys = view.layer === 'overview' ? [`1-${Math.min(9, tabs.length)} open`, 'o back', 'q quit']
-    : view.layer === 'help' ? ['any key back', 'q quit']
-      : view.layer === 'detail' ? ['↑↓ step', 'esc back', 'q quit']
-        : replay ? ['space play', '←→ 30s', '[ ] task', '+- speed', '↑↓ select', 'q quit']
-          : ['? keys', '↑↓ select', '⏎ open', tabs.length > 1 && 'tab switch', tabs.length > 1 && 'o overview', `s ${view.story ? 'all steps' : 'story'}`, `e ${view.expand ? 'fold' : 'expand'}`, `b bell ${view.bell ? 'on' : 'off'}`, `n notify ${view.notify ? 'on' : 'off'}`, 'q quit'].filter(Boolean);
-  const factText = `  ${facts.join('  ·  ')}`;
-  // Hints that don't fit drop from the end, but quitting is always shown.
-  const fitted = [...keys];
-  while (fitted.length > 1 && factText.length + 4 + fitted.join('  ·  ').length > width - 1) fitted.splice(fitted.length - 2, 1);
-  const keyText = ui.color ? fitted.join('  ·  ') : '';
-  footer.push(ui.dim(`${factText}${' '.repeat(Math.max(4, width - factText.length - keyText.length - 1))}${keyText}`.trimEnd()));
+  const keys = view.layer === 'overview' ? `1-${Math.min(9, tabs.length)} open  ·  o back`
+    : view.layer === 'help' ? 'any key back'
+      : view.layer === 'detail' ? '↑↓ step  ·  esc back'
+        : replay ? 'space play  ·  ←→ 30s  ·  [ ] task  ·  +- speed'
+          : view.selected != null ? '⏎ open  ·  esc follow'
+            : '? for shortcuts';
+  if (ui.color) {
+    // Facts drop from the end before the keys do, and quitting is always shown.
+    const fitted = [...facts];
+    const right = () => [...fitted, 'q quit'].join('  ·  ');
+    while (fitted.length && 2 + keys.length + 4 + right().length > width - 1) fitted.pop();
+    const left = `  ${ui.clip(keys, Math.max(4, width - 1 - right().length - 6))}`;
+    footer.push(ui.dim(`${left}${' '.repeat(Math.max(4, width - 1 - left.length - right().length))}${right()}`));
+  } else footer.push(`  ${facts.join('  ·  ')}`);
 
   // Fits the body between header and footer; a live screen pins the footer to the bottom row.
   const finish = (body) => {
@@ -641,39 +645,31 @@ export function render(state, ui, opts = {}) {
   };
 
   if (view.layer === 'overview') return finish(overview(tabs.length ? tabs : [{ state }], state, ui, { now, width, glyph, contextLine, relTo }));
-  if (view.layer === 'help') return finish(help(ui, width, tabs.length > 1));
+  if (view.layer === 'help') return finish(help(ui, width, tabs.length > 1, [`turn ${state.turns}`, plural(state.tools, 'tool'), state.tokens && `${count(state.tokens)} tokens`, `session ${state.id}`].filter(Boolean).join('  ·  ')));
 
-  // The main agent: model, effort, totals, the context it holds, what it last said, and what it's doing.
-  const agentBlock = (w) => {
-    const out = [ui.section('agent', w)];
-    const current = state.tasks[state.tasks.length - 1];
-    const mainIcon = state.busy ? ui.tone('accent', ui.spinner(now)) : state.ended ? ui.dim('■') : ui.tone('ok', '✔');
-    const mainModel = state.model ? ui.model(state.model, FAMILY(state.model)) : ui.dim('model unknown');
-    const ctx = contextLine(state, Math.min(24, Math.max(10, w - 44)));
-    const gauged = ctx && modelInfo(state.model).window;
-    const stats = [`turn ${state.turns}`, `${state.tools} tools`, !gauged && state.context && `${count(state.context)} context`, state.tokens && `${count(state.tokens)} tokens`].filter(Boolean).join('  ·  ');
-    out.push(`  ${mainIcon}  ${ui.bold('main')}   ${mainModel}${state.auto ? ui.dim(' (auto)') : ''}${state.effort ? ` ${ui.effort(state.effort, { word: false })}` : ''}   ${ui.dim(stats)}`);
-    if (gauged) out.push(`     ${ui.dim('context')}  ${ctx}`);
-    const p = phase(state);
+  // What the main agent is doing now, Claude Code's spinner line: working and on what, or waiting on
+  // you with the question in full, plus anything that has gone wrong.
+  const statusBlock = (w) => {
+    const out = [];
     const t = trouble(state, now);
-    if (t) out.push(`     ${ui.tone(t.level, `▲ ${ui.clip(t.text, w - 10)}`)}`);
-    const mainRun = [...state.running.values()].filter((r) => r.agent === 'main' && r.kind !== 'agent');
+    if (t) out.push(ui.tone(t.level, `▲ ${ui.clip(t.text, w - 4)}`));
+    const p = phase(state);
     if (p === 'working') {
-      if (state.says) out.push(`     ${ui.dim('says')}     ${ui.clip(`“${state.says.text.replace(/\s+/g, ' ')}”`, w - 16)}`);
-      const doing = mainRun.at(-1);
-      const lead = `${ui.tone('accent', 'working')} ${ui.dim(span(now - (current?.at || now)))}`;
-      out.push(`     ${lead}${doing ? `   ${ui.tone('accent', '→')} ${ui.bold(doing.name)} ${ui.dim(span(now - (doing.at || now)))}  ${ui.dim(ui.clip(rel(doing.target), Math.max(10, w - 34 - doing.name.length)))}` : ''}`);
+      // The step itself shows what's running, so this line names only the tool.
+      const doing = [...state.running.values()].filter((r) => r.agent === 'main' && r.kind !== 'agent').at(-1);
+      const current = state.tasks[state.tasks.length - 1];
+      const why = [span(now - (current?.at || now)) || '0s', doing?.name].filter(Boolean).join(' · ');
+      out.push(`${ui.tone('accent', ui.spinner(now))} ${ui.tone('accent', 'Working…')} ${ui.dim(`(${why})`)}`);
     } else if (p === 'your turn') {
-      out.push(`     ${ui.tone('warn', 'your turn')} ${ui.dim(`· waiting ${span(now - (state.idleSince || now)) || '0s'}`)}`);
+      out.push(`${ui.tone('warn', ui.color ? '●' : '!')} ${ui.tone('warn', 'Your turn')} ${ui.dim(`· waiting ${span(now - (state.idleSince || now)) || '0s'}`)}`);
       // The agent's last words are usually the question it's waiting on, so they show in full.
       if (state.says) {
-        const lines = wrapText(state.says.text, Math.max(20, w - 9));
+        const lines = wrapText(state.says.text, Math.max(20, w - 7));
         const shown = lines.length > 6 ? [...lines.slice(0, 5), `… ${plural(lines.length - 5, 'more line')}, ⏎ opens it`] : lines;
-        out.push(...shown.map((l) => `     ${ui.tone('warn', '│')} ${l}`));
+        out.push(...shown.map((l) => `  ${ui.tone('warn', '│')} ${l}`));
       }
     }
-    out.push('');
-    return out;
+    return out.length ? ['', ...out] : [];
   };
 
   // Subagents of the latest task, and any still running; earlier ones fold into a count. Each row ends in
@@ -684,7 +680,7 @@ export function render(state, ui, opts = {}) {
     const out = [];
     const latest = Math.max(0, state.tasks.length - 1);
     const shownAgents = view.expand ? agents : agents.filter((a) => a.task === latest || a.status === 'running');
-    out.push(ui.section(`subagents  ${agents.filter((a) => a.status === 'running').length} running · ${agents.length} total`, w));
+    out.push(heading(ui, `subagents  ${agents.filter((a) => a.status === 'running').length} running · ${agents.length} total`));
     if (shownAgents.length) {
       const t0 = Math.min(...shownAgents.map((a) => a.started || now));
       const t1 = Math.max(...shownAgents.map((a) => (a.status === 'running' ? now : (a.started || now) + (a.duration || 0))), t0 + 1000);
@@ -715,13 +711,11 @@ export function render(state, ui, opts = {}) {
         table = build(false, spare >= 6 ? spare : 0);
         if (widest(table, 3) > w) { table = build(true); gap = 2; }
       }
-      const lines = ui.table(table, { gap }).split('\n');
-      out.push(...lines);
+      out.push(...ui.table(table, { gap }).split('\n'));
     }
     for (const a of shownAgents.filter((x) => x.error)) out.push(`     ${ui.tone('fail', '✖')} ${ui.dim(ui.clip(`${a.name}: ${a.error}`, w - 8))}`);
     const earlier = agents.length - shownAgents.length;
     if (earlier) out.push(ui.dim(`     + ${plural(earlier, 'subagent')} from earlier tasks${ui.color ? '  ·  e shows them' : ''}`));
-    out.push('');
     return out;
   };
 
@@ -738,7 +732,7 @@ export function render(state, ui, opts = {}) {
     const removed = files.reduce((n, [, f]) => n + f.removed, 0);
     const lines = (a, r) => [a && `+${a}`, r && `−${r}`].filter(Boolean).join(' ');
     const stat = (f) => (f.counted ? `${f.added ? ui.tone('ok', `+${f.added}`) : ''}${f.added && f.removed ? ' ' : ''}${f.removed ? ui.tone('fail', `−${f.removed}`) : ''}` : '');
-    const out = [ui.section(`files  ${files.length} changed${added || removed ? ` · ${lines(added, removed)}` : ''}`, w)];
+    const out = [heading(ui, `files  ${files.length} changed${added || removed ? ` · ${lines(added, removed)}` : ''}`)];
     const colW = w >= 90 ? Math.floor((w - 4) / 2) : w - 4;
     const shown = files.slice(-max).map(([f, info]) => {
       const s = stat(info);
@@ -751,64 +745,99 @@ export function render(state, ui, opts = {}) {
     if (outside) out.push(ui.dim(`  + ${outside} outside the project`));
     // Git's own count catches what the shell changed, which no edit call names.
     if (repo) out.push(`  ${ui.dim('git now')}  ${ui.dim([repo.changed && `${repo.changed} modified`, repo.untracked && `${repo.untracked} untracked`, lines(repo.added, repo.removed)].filter(Boolean).join(' · '))}`);
-    out.push('');
     return out;
   };
 
-  // Tasks: one summary line per earlier task, and the steps of the latest one; or one step opened up.
-  const feedBlock = (w, room) => {
-    const subNames = state.activity.filter((a) => a.agent !== 'main').map((a) => a.agent.length);
-    const nameWidth = subNames.length ? Math.min(18, Math.max(...subNames)) : 0;
-    const verbWidth = w >= 110 ? 24 : 19;
-    const stepLine = (a) => {
-      const who = nameWidth ? `${ui.pad(a.agent === 'main' ? '' : a.family ? ui.tone(a.family, ui.clip(a.agent, nameWidth)) : ui.clip(a.agent, nameWidth), nameWidth)}  ` : '';
-      const verb = ui.pad(a.tool ? ui.dim(ui.clip(`${a.tool}${a.times > 1 ? ` ×${a.times}` : ''}`, verbWidth - 1)) : '', verbWidth);
-      const raw = ui.clip(a.kind === 'say' ? `“${a.text}”` : rel(a.text), Math.max(10, w - nameWidth - verbWidth - 21));
-      const text = a.kind === 'fail' ? ui.tone('fail', raw) : a.kind === 'say' ? ui.dim(raw) : raw;
-      const mark = a.key === view.selected ? `   ${ui.tone('accent', '▶')} ` : '     ';
-      const line = `${mark}${ui.dim(clock(a.at))}  ${who}${a.tone ? ui.tone(a.tone, a.icon) : a.icon}  ${verb}${text}`;
-      return a.key === view.selected ? ui.bold(line) : line;
-    };
-    // Every task line puts its counts in one right-hand column, as wide as the widest of them.
+  // Tasks, the way Claude Code shows a conversation: earlier tasks fold to one quiet line each, the
+  // latest opens with its prompt, and each step is a ⏺ line with its result under a ⎿.
+  const feedBlock = (w, room, titled = false) => {
     const factsOf = (t, i) => {
       const isLatest = i === state.tasks.length - 1;
       return [plural(t.tools, 'tool'), t.agents && plural(t.agents, 'agent'), t.files.size && plural(t.files.size, 'file'), t.errors && plural(t.errors, 'error'), span((t.endAt || (isLatest && !state.ended ? now : t.at)) - t.at)].filter(Boolean).join(' · ');
     };
     const factsWidth = Math.min(44, Math.max(0, ...state.tasks.map((t, i) => factsOf(t, i).length)));
-    const taskLine = (t, i, open) => {
-      const isLatest = i === state.tasks.length - 1;
-      const icon = isLatest ? glyph(state) : t.broke ? ui.tone('fail', '✖') : ui.tone('ok', '✔');
+    const prompt = (t) => t.prompt || 'before the first prompt';
+    const tinted = (t, text) => (t.errors ? text.replace(plural(t.errors, 'error'), ui.tone('fail', plural(t.errors, 'error'))) : text);
+    // An earlier task: its outcome, the prompt, and its counts in one right-hand column.
+    const pastLine = (t, i) => {
       const tf = ui.clip(factsOf(t, i), factsWidth);
-      const prompt = t.prompt ? `“${t.prompt}”` : 'before the first prompt';
-      const lead = `  ${ui.dim(open ? '▾' : '▸')} ${icon} ${ui.dim(clock(t.at).slice(0, 5))}  `;
-      const promptRoom = Math.max(12, w - stripLen(lead) - factsWidth - 4);
-      const shown = ui.clip(prompt, promptRoom);
-      const styled = !t.prompt ? ui.dim(shown) : open ? ui.bold(shown) : shown;
-      const tinted = t.errors ? tf.replace(plural(t.errors, 'error'), ui.tone('fail', plural(t.errors, 'error'))) : tf;
-      return `${lead}${styled}${' '.repeat(promptRoom - stripLen(shown) + 2)}${ui.dim(' '.repeat(factsWidth - tf.length))}${ui.dim(tinted)}`;
+      const room = Math.max(12, w - 4 - factsWidth - 2);
+      const shown = ui.clip(prompt(t), room);
+      return `${t.broke ? ui.tone('fail', '✖') : ui.tone('ok', '✔')} ${ui.dim(shown)}${' '.repeat(room - shown.length + 2)}${ui.dim(' '.repeat(factsWidth - tf.length))}${ui.dim(tinted(t, tf))}`;
+    };
+    // The open task's prompt, as Claude Code echoes what you typed.
+    const promptLine = (t, i) => {
+      const tf = factsOf(t, i);
+      const room = Math.max(12, w - 4 - tf.length - 2);
+      const shown = ui.clip(prompt(t), room);
+      return `${ui.tone('accent', '>')} ${t.prompt ? ui.bold(shown) : ui.dim(shown)}${' '.repeat(room - shown.length + 2)}${ui.dim(tinted(t, tf))}`;
+    };
+    // One step as lines: the ⏺ head, its ⎿ result when there's one worth showing, and a blank line after.
+    const stepBlock = (a) => {
+      const e = a.latest || a;
+      const selected = a.key === view.selected;
+      const running = e.call && state.running.has(e.call);
+      const dot = selected ? ui.tone('accent', '▶')
+        : running ? ui.tone('accent', ui.spinner(now + a.key * 31))
+          : a.kind === 'fail' ? ui.tone('fail', '⏺')
+            : a.kind === 'say' ? '⏺'
+              : a.kind === 'note' ? ui.dim('⏺')
+                : ui.tone('ok', '⏺');
+      // A subagent finishing logs as done, failed, or cancelled under its own name.
+      const finished = a.kind === 'done' || (a.agent !== 'main' && ['failed', 'cancelled'].includes(a.tool));
+      const who = a.agent !== 'main' && !finished ? `${a.family ? ui.tone(a.family, a.agent) : ui.bold(a.agent)} ${ui.dim('›')} ` : '';
+      const room = Math.max(10, w - 4 - stripLen(who));
+      const target = (text) => ui.clip(rel(text).replace(/\s+/g, ' '), Math.max(4, room - (a.tool || '').length - 2));
+      let line;
+      let result = null;
+      if (a.kind === 'say') {
+        // The opening paragraph, without Markdown marks, in two lines at most; ⏎ opens all of it.
+        const opening = String(e.full || a.text).trim().split(/\n\s*\n/)[0].replace(/\*\*|__|^#+\s*/gm, '').replace(/\s+/g, ' ');
+        const said = wrapText(opening, room);
+        line = said.length > 2 ? `${said[0]}\n  ${ui.clip(`${said[1]}…`, room)}` : said.join('\n  ');
+      } else if (a.kind === 'agent') {
+        line = `${ui.bold('Agent')}(${target(a.text)})`;
+      } else if (finished) {
+        line = `${a.family ? ui.tone(a.family, ui.bold(a.agent)) : ui.bold(a.agent)} ${ui.dim(a.tool || 'done')}`;
+        result = a.kind === 'fail' ? ui.tone('fail', a.text) : ui.dim(a.text);
+      } else if (a.kind === 'note') {
+        line = ui.dim(`${a.tool}  ${a.text}`);
+      } else {
+        const full = (e.full || '').replace(/\s+/g, ' ');
+        line = `${ui.bold(a.tool || 'tool')}${full ? `(${target(full)})` : ''}`;
+        if (a.kind === 'fail') result = ui.tone('fail', ui.clip(e.error || a.text, room));
+        else if (running) result = ui.dim(`running ${span(now - (e.at || now))}`);
+        else if (e.patch) result = `${ui.tone('ok', `+${e.patch.added}`)} ${ui.tone('fail', `−${e.patch.removed}`)}`;
+      }
+      if (a.times > 1) result = [result, ui.dim(`${a.times} calls`)].filter(Boolean).join(ui.dim(' · '));
+      const head = `${dot} ${who}${line}`;
+      return [...head.split('\n').map((l) => (selected ? ui.bold(l) : l)), ...(result ? [`  ${ui.dim('⎿')}  ${result}`] : []), ''];
     };
 
-    const out = [ui.section(view.layer === 'detail' ? 'step' : `tasks  ${state.tasks.length}`, w)];
-    if (view.layer === 'detail') return [...out, ...detail(selectable(state, view.expand, view.story).find((s) => s.key === view.selected), w, room - 1)];
+    const out = titled ? [heading(ui, view.layer === 'detail' ? 'step' : `tasks  ${state.tasks.length}`)] : [];
+    const left = room - out.length;
+    if (view.layer === 'detail') return [...out, ...detail(selectable(state, view.expand, view.story).find((s) => s.key === view.selected), w, left)];
     if (!state.tasks.length) return [...out, ui.dim('  waiting for the agent…')];
     if (view.expand) {
-      const items = [];
-      let focus = null;
+      const blocks = [];
       state.tasks.forEach((t, i) => {
-        items.push(taskLine(t, i, true));
-        for (const s of stepsOf(state, i, view.story)) { if (s.key === view.selected) focus = items.length; items.push(stepLine(s)); }
+        blocks.push([promptLine(t, i), '']);
+        for (const s of stepsOf(state, i, view.story)) blocks.push({ key: s.key, lines: stepBlock(s) });
       });
-      return [...out, ...windowed(items, room - 1, focus, ui, '  ', 'line')];
+      return [...out, ...fitBlocks(blocks.map((b) => (Array.isArray(b) ? { lines: b } : b)), left, view.selected, ui, 'step')];
     }
     const last = state.tasks.length - 1;
-    let older = state.tasks.slice(0, last).map((t, i) => taskLine(t, i, false));
-    const steps = stepsOf(state, last, view.story);
-    // Earlier tasks keep at most a third of the room; the latest task's steps get the rest.
-    const olderRoom = Math.min(older.length, Math.max(1, Math.floor(room / 3)));
+    let older = state.tasks.slice(0, last).map((t, i) => pastLine(t, i));
+    // Earlier tasks keep at most a fifth of the room; the latest task's steps get the rest.
+    const olderRoom = Math.min(older.length, Math.max(1, Math.floor(left / 5)));
     if (older.length > olderRoom) older = [ui.dim(`  ↑ ${plural(older.length - olderRoom + 1, 'earlier task')}`), ...older.slice(older.length - olderRoom + 1)];
-    const stepRoom = Math.max(1, room - 1 - older.length - 1);
-    const focus = steps.findIndex((s) => s.key === view.selected);
-    return [...out, ...older, taskLine(state.tasks[last], last, true), ...windowed(steps.map(stepLine), stepRoom, focus < 0 ? null : focus, ui, '     ', 'step')];
+    if (older.length) older.push('');
+    const latest = stepsOf(state, last, view.story);
+    // While it's your turn, the question shows in full below, so the feed doesn't repeat it.
+    const asking = phase(state) === 'your turn' && latest.at(-1)?.kind === 'say' && latest.at(-1).key !== view.selected;
+    const steps = (asking ? latest.slice(0, -1) : latest).map((s) => ({ key: s.key, lines: stepBlock(s) }));
+    const stepRoom = Math.max(1, left - older.length - 2);
+    return [...out, ...older, promptLine(state.tasks[last], last), '', ...fitBlocks(steps, stepRoom, view.selected, ui, 'step')];
   };
 
   // One step opened up: what ran, who ran it, how it ended, its full target, and its output or diff.
@@ -845,17 +874,22 @@ export function render(state, ui, opts = {}) {
   const bodyRows = Math.max(8, rows - 1 - head.length - footer.length - 1);
   if (!wide) {
     // An opened step gets the whole body; esc brings the rest back.
-    if (view.layer === 'detail') return finish(feedBlock(width, bodyRows));
-    // Files sit under the feed, as they always have; the agent blocks go above it.
-    const above = [...agentBlock(width), ...subagentBlock(width)];
+    if (view.layer === 'detail') return finish(feedBlock(width, bodyRows, true));
+    // Below the feed, from top to bottom: subagents, what the agent is doing now, and the files.
+    const agents = subagentBlock(width);
     const files = filesBlock(width);
-    const room = Math.max(5, bodyRows - above.length - (files.length ? files.length + 1 : 0));
-    return finish([...above, ...feedBlock(width, room), ...(files.length ? ['', ...files] : [])]);
+    const below = [...(agents.length ? ['', ...agents] : []), ...statusBlock(width), ...(files.length ? ['', ...files] : [])];
+    const feed = feedBlock(width, Math.max(5, bodyRows - below.length));
+    while (feed.length && feed.at(-1) === '') feed.pop();
+    return finish([...feed, ...below]);
   }
   const leftW = Math.floor(width * 0.58);
   const rightW = width - leftW - 3;
-  const right = [...agentBlock(rightW), ...subagentBlock(rightW, true), ...filesBlock(rightW, 12)];
-  const leftLines = feedBlock(leftW, bodyRows);
+  const status = statusBlock(rightW).slice(1);
+  const agents = subagentBlock(rightW, true);
+  const files = filesBlock(rightW, 12);
+  const right = [heading(ui, 'agent'), ...(status.length ? status : [ui.dim('  idle')]), ...(agents.length ? ['', ...agents] : []), ...(files.length ? ['', ...files] : [])];
+  const leftLines = feedBlock(leftW, bodyRows, true);
   const height = pin ? bodyRows : Math.max(leftLines.length, right.length);
   const body = [];
   for (let i = 0; i < height; i += 1) {
@@ -866,8 +900,36 @@ export function render(state, ui, opts = {}) {
   return finish(body);
 }
 
+// A quiet section label: dim lowercase words, no rule, where the old view had a coloured bar.
+const heading = (ui, title) => (ui.color ? `  ${ui.dim(title)}` : title);
+
+// Blocks of lines cut to `room` lines, keeping the focused block in view (or the newest when following),
+// with a count of what was cut above and below.
+function fitBlocks(blocks, room, focus, ui, noun) {
+  if (!blocks.length) return [];
+  const at = blocks.findIndex((b) => b.key != null && b.key === focus);
+  let lo = at < 0 ? blocks.length - 1 : at;
+  let hi = lo;
+  let used = blocks[lo].lines.length;
+  const marks = () => (lo > 0 ? 1 : 0) + (hi < blocks.length - 1 ? 1 : 0);
+  for (let turn = 0; ; turn += 1) {
+    const up = lo > 0 && used + blocks[lo - 1].lines.length + marks() + (lo - 1 === 0 ? -1 : 0) <= room;
+    const down = hi < blocks.length - 1 && used + blocks[hi + 1].lines.length + marks() <= room;
+    if (at >= 0 && down && (turn % 2 === 1 || !up)) { hi += 1; used += blocks[hi].lines.length; continue; }
+    if (up) { lo -= 1; used += blocks[lo].lines.length; continue; }
+    if (down) { hi += 1; used += blocks[hi].lines.length; continue; }
+    break;
+  }
+  const lines = blocks.slice(lo, hi + 1).flatMap((b) => b.lines).slice(-Math.max(1, room - marks()));
+  return [
+    ...(lo > 0 ? [ui.dim(`  ↑ ${plural(lo, `earlier ${noun}`)}`)] : []),
+    ...lines,
+    ...(hi < blocks.length - 1 ? [ui.dim(`  ↓ ${plural(blocks.length - 1 - hi, `later ${noun}`)}`)] : []),
+  ];
+}
+
 // Every key and glyph on one screen.
-function help(ui, width, many) {
+function help(ui, width, many, stats = '') {
   const rows = [
     ['↑ ↓  j k', 'select a step'],
     ['⏎', 'open it: the full command, its output, the diff, or what was said'],
@@ -885,7 +947,7 @@ function help(ui, width, many) {
     [ui.tone('fail', '▲'), 'failed three times in a row, or went quiet'], [ui.dim('■'), 'ended'],
     [ui.tone('ok', '✔'), 'the subagent ran on its role\'s model'], [ui.tone('warn', '▲'), 'it fell back to the session model'],
   ].map(([m, what]) => [m, ui.dim(what)]);
-  return [ui.section('keys', width), ...ui.table(rows, { indent: 4 }).split('\n'), '', ui.section('marks', width), ...ui.table(marks, { indent: 4 }).split('\n'), '',
+  return [...(stats ? [`  ${ui.dim(stats)}`, ''] : []), heading(ui, 'keys'), ...ui.table(rows, { indent: 4 }).split('\n'), '', heading(ui, 'marks'), ...ui.table(marks, { indent: 4 }).split('\n'), '',
     ui.dim('    tblock watch --replay plays a session back · --session=<id> pins one · --once prints a snapshot')];
 }
 
@@ -910,7 +972,7 @@ function overview(tabs, active, ui, { now, width, glyph, contextLine, relTo }) {
     ];
     return lines.map((l) => ui.fit(l, cardW));
   });
-  const out = [ui.section(`overview  ${plural(tabs.length, 'session')}`, width)];
+  const out = [heading(ui, `overview  ${plural(tabs.length, 'session')}`)];
   for (let i = 0; i < cards.length; i += perRow) {
     const row = cards.slice(i, i + perRow);
     for (let line = 0; line < 5; line += 1) out.push(`  ${row.map((c) => `${c[line]}${' '.repeat(Math.max(0, cardW - stripLen(c[line])))}`).join('  ')}`.trimEnd());
@@ -1068,7 +1130,8 @@ export async function watch({ ui, copilotHome, claudeHome, version, session, onc
 
   if (once || !tty) {
     const git = active.state.cwd ? repoStateSync(active.state.cwd) : null;
-    process.stdout.write(`${render(active.state, ui, { cols: process.stdout.columns || Number(env.COLUMNS) || 100, rows: 1000, following: !session, once: true, version, tabs: tabs(), expand: true, git }).join('\n')}\n`);
+    // A person gets the screen they'd see live; an agent reading a pipe gets every task.
+    process.stdout.write(`${render(active.state, ui, { cols: process.stdout.columns || Number(env.COLUMNS) || 100, rows: tty ? process.stdout.rows || 40 : 1000, following: !session, once: true, version, tabs: tabs(), expand: !tty, git }).join('\n')}\n`);
     return;
   }
 

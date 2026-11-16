@@ -118,6 +118,8 @@ tblock ships a small node cli with no dependencies. `/setup-tblock` puts it on y
 | `tblock guard on` | has the harness ask before a push, pr, ticket or publish |
 | `tblock watch` | a live view of your agent sessions and their subagents |
 | `tblock log` | what every session did since yesterday, for a standup |
+| `tblock usage` | tokens and cost per day, project, model or session, with cache hit and subagent share |
+| `tblock statusline on` | this session's tokens and cost, and today's, in claude code's status bar |
 | `tblock handoff` | a brief of the last session, to pick up where it left off |
 | `tblock models` | lists your copilot models and suggests tiers |
 

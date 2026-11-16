@@ -412,15 +412,17 @@ test('watch reads a Claude Code session: the prompt, each subagent with its mode
   const r = cli('watch', '--once');
   assert.equal(r.code, 0, r.err);
   assert.match(r.out, /Claude Code {2}·/);
-  assert.match(r.out, /main {3}claude-opus-5-5 high {3}turn 1/, 'the main agent shows its model and effort');
-  assert.match(r.out, /▾ ! \d\d:\d\d {2}“\/tblock:tblock-mode add a severity filter”\s+4 tools · 2 agents · 1 file · 15s/, 'the task is the prompt as the user typed it, with its counts');
-  assert.match(r.out, /your turn · waiting/);
-  assert.match(r.out, /Add the filter\s+✔ {2}done\s+1 tool call\n/);
+  assert.match(r.out, /│ claude-opus-5-5 high {2}· {2}context/, 'the header box shows the main model and effort');
+  assert.match(r.out, /> \/tblock:tblock-mode add a severity filter\s+4 tools · 2 agents · 1 file · 15s/, 'the task is the prompt as the user typed it, with its counts');
+  assert.match(r.out, /Your turn · waiting/);
+  assert.match(r.out, /⏺ Add the filter done\n {2}⎿ {2}1 tool call\n/, 'a subagent finishing is a step with its result under it');
+  assert.match(r.out, /⏺ Add the filter › Edit\(src\/alerts\/AlertsPage\.tsx\)\n {2}⎿ {2}\+3 −1/, 'a subagent step names the subagent and shows its diff count');
+  assert.doesNotMatch(r.out, /\d\d:\d\d:\d\d/, 'steps carry no timestamps');
   assert.doesNotMatch(r.out, /Base directory for this skill/, 'skill bodies are not prompts');
   assert.match(r.out, /Add the filter\s+claude-sonnet-5-5\s+medium\s+42s\s+1 tools · 31\.0k tok\s+✔ role model/);
   assert.match(r.out, /Review the filter\s+claude-opus-5-5\s+9s\s+0 tools · 12\.0k tok\s+▲ session model/);
   assert.match(r.out, /✎ …\/alerts\/AlertsPage\.tsx/, 'a subagent edit counts as a changed file');
-  assert.match(r.out, /✔ {2}main /, 'the turn has ended');
+  assert.doesNotMatch(r.out, /Working…/, 'the turn has ended');
 });
 
 test('watch lists every live session as a tab and folds a run of one tool into one line', async () => {
@@ -433,7 +435,7 @@ test('watch lists every live session as a tab and folds a run of one tool into o
   writeWatchSession(join(home, '.copilot'));
   const r = cli('watch', '--once');
   assert.equal(r.code, 0, r.err);
-  const tabs = r.out.split('\n')[2];
+  const tabs = r.out.split('\n').find((l) => /▸1 /.test(l)) || '';
   assert.match(tabs, /▸1 /, 'the session on screen is marked');
   assert.match(tabs, /dashboard · \/tblock-mode add a sever.* \d+h/, 'a Claude Code tab: its folder, what it was asked, and how long it has waited');
   assert.match(tabs, /dashboard · Alerts severity filter/, 'a Copilot tab');
@@ -446,7 +448,7 @@ test('a Claude Code turn stays busy until its reply text lands, not when its thi
   const { claudeSessionRecords, writeClaudeSession } = await import('./fixtures/watch-claude-session.mjs');
   const { home, cli } = sandbox();
   writeClaudeSession(join(home, '.claude'), claudeSessionRecords({ finished: false }));
-  assert.match(cli('watch', '--once').out, /\* {2}main /);
+  assert.match(cli('watch', '--once').out, /\* Working…/);
 });
 
 test('the watch reader keeps a half-written line until the rest arrives', async () => {
@@ -469,9 +471,9 @@ test('watch shows what the agent said, what broke, its context, and the lines ea
   assert.equal(r.code, 0, r.err);
   assert.match(r.out, /│ Should I keep the old empty-state copy, or use the new one from the design\?/, 'the question it waits on shows in full');
   assert.match(r.out, /▲ failed 3× in a row · Bash · exit 1 · AssertionError: expected 3 rows, got 5/, 'three failures in a row get flagged');
-  assert.match(r.out, /✖ {2}Bash\s+exit 1 · AssertionError: expected 3 rows/, 'a failed step says why');
+  assert.match(r.out, /⏺ Bash\(npm test -- alerts\)\n {2}⎿ {2}exit 1 · AssertionError: expected 3 rows/, 'a failed step says why');
   assert.match(r.out, /context {2}\[\.+\] {2}1\.1k \/ 1M · 0% · compacted ×1/, 'context against the model window');
-  assert.match(r.out, /t3·background_wait\s+taskId=b1/, 'MCP tools read as server·tool with their argument');
+  assert.match(r.out, /t3·background_wait\(taskId=b1\)/, 'MCP tools read as server·tool with their argument');
   assert.match(r.out, /FILES {2}1 changed · \+3 −1/i);
   assert.match(r.out, /✎ …\/alerts\/AlertsPage\.tsx {2}\+3 −1/);
   assert.match(r.out, /≈ \$0\.0\d/, 'an estimated cost from the price table');
@@ -572,12 +574,12 @@ test('watch tells the story, lists its keys, and counts what git and the project
   const draw = (opts) => render(state, ui, { now, cols: 110, rows: 60, ...opts }).join('\n');
 
   const all = draw({ git: parseGit(' M src/slug.ts\n?? notes.md\n', '4\t1\tsrc/slug.ts\n') });
-  assert.match(all, /Bash\s+exit 1 · AssertionError: slug {2}npm test/, 'a cd into the project drops from the command');
+  assert.match(all, /⏺ Bash\(npm test\)\n {2}⎿ {2}exit 1 · AssertionError: slug/, 'a cd into the project drops from the command');
   assert.match(all, /files {2}1 changed · \+4\n {2}✚ src\/slug\.ts {2}\+4\n {2}\+ 1 outside the project\n {2}git now {2}1 modified · 1 untracked · \+4 −1/, 'a new file is marked new, and scratch files fold into a count');
 
   const story = draw({ view: { ...initialView(), story: true } });
-  assert.match(story, /says\s+“Fixed the slug\.”/);
-  assert.match(story, /✖ {2}Bash/, 'the story keeps what broke');
+  assert.match(story, /⏺ Fixed the slug\./);
+  assert.match(story, /⏺ Bash\(npm test\)\n {2}⎿ {2}exit 1/, 'the story keeps what broke');
   assert.doesNotMatch(story, /Write/, 'and drops the tool calls');
   assert.equal(onKey(initialView(), 's', {}).view.story, true);
   assert.equal(onKey(initialView(), '?', {}).view.layer, 'help');
@@ -588,6 +590,28 @@ test('watch tells the story, lists its keys, and counts what git and the project
   assert.deepEqual(trouble(state, now), { level: 'fail', text: "stopped · You've hit your 5-hour limit" }, 'a limit that stopped the run is trouble');
   ev(11, 'assistant.turn_start', {});
   assert.equal(trouble(state, now), null, 'until it works again');
+});
+
+test('watch folds earlier tasks to one line and opens the latest as ⏺ steps', async () => {
+  const { createState, applyEvent, render } = await import('./watch.mjs');
+  const { createUI } = await import('./ui.mjs');
+  const ui = createUI({ color: false, version: 't', env: {} });
+  const state = createState('s2', null);
+  const at = (n) => new Date(Date.UTC(2026, 0, 1, 12, 0, n)).toISOString();
+  const ev = (n, type, data) => applyEvent(state, { type, data, timestamp: at(n) });
+  ev(0, 'session.start', { startTime: at(0), context: { cwd: '/work/app' } });
+  ev(1, 'user.message', { content: 'read the readme' });
+  ev(2, 'tool.execution_start', { toolCallId: 'a', toolName: 'Read', arguments: { file_path: '/work/app/README.md' } });
+  ev(3, 'tool.execution_complete', { toolCallId: 'a', success: true });
+  ev(4, 'user.message', { content: 'now fix the slug' });
+  ev(4, 'assistant.turn_start', {});
+  ev(5, 'tool.execution_start', { toolCallId: 'b', toolName: 'Bash', arguments: { command: 'npm test' } });
+  const out = render(state, ui, { now: Date.parse(at(9)), cols: 100, rows: 40 }).join('\n');
+  assert.match(out, /^✔ read the readme +1 tool · 3s$/m, 'an earlier task is one line: outcome, prompt, counts');
+  assert.doesNotMatch(out, /Read\(README\.md\)/, 'and its steps stay folded');
+  assert.match(out, /^> now fix the slug/m);
+  assert.match(out, /Bash\(npm test\)\n {2}⎿ {2}running 4s/, 'a running step says so under it');
+  assert.match(out, /^\* Working… \(5s · Bash\)$/m);
 });
 
 test('doctor shows which project files the current repo has', () => {

@@ -1,8 +1,8 @@
 // `tblock log`: what every agent session did since a date, and what it cost, for a standup or a handoff.
 // Reads Claude Code transcripts and Copilot event logs, including sessions still running. Node built-ins only.
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { basename, join } from 'node:path';
-import { addModelUsage, addUsage, emptyUsage, priceOf, tokensOf } from './usage.mjs';
+import { basename, dirname, join } from 'node:path';
+import { addModelUsage, addUsage, cacheHit, emptyUsage, priceOf, tokensOf } from './usage.mjs';
 import { applyEvent, createReader, createState, listSessions, sessionsDir } from './watch.mjs';
 
 const LIVE_MS = 10 * 60 * 1000;
@@ -28,8 +28,22 @@ export function parseSince(text = 'yesterday', now = new Date()) {
 
 const newRun = (harness, id) => ({
   harness, id, title: null, cwd: null, branch: null, started: null, last: null, live: false,
-  prompt: null, prompts: [], reply: null, path: null, links: new Set(), files: new Set(), agents: [], usage: new Map(), premium: 0,
+  prompt: null, prompts: [], reply: null, path: null, links: new Set(), files: new Set(), agents: [], usage: new Map(), premium: 0, days: new Map(),
 });
+
+// A local calendar day, YYYY-MM-DD, so `tblock usage` groups by the day the user lived through.
+export const dayKey = (ms) => {
+  const d = new Date(ms);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+// Usage per day, model, and whether a subagent spent it, so a session that runs past midnight
+// counts each day's tokens on that day.
+function addDaily(run, at, model, u, subagent) {
+  const key = dayKey(at ?? run.last ?? Date.now());
+  const day = run.days.get(key) || run.days.set(key, { main: new Map(), subagents: new Map() }).get(key);
+  addModelUsage(subagent ? day.subagents : day.main, model, u);
+}
 
 const linksIn = (run, text) => { for (const m of String(text).matchAll(LINK)) run.links.add(m[0]); };
 const textOf = (content) => (typeof content === 'string' ? content
@@ -79,6 +93,7 @@ function foldClaude(run, entries, seen, usage) {
       if (m.id && m.usage && !seen.has(m.id)) {
         seen.add(m.id);
         addModelUsage(run.usage, m.model, claudeUsage(m.usage));
+        addDaily(run, at, m.model, claudeUsage(m.usage), Boolean(usage));
         if (usage) addUsage(usage, claudeUsage(m.usage));
       }
       for (const block of Array.isArray(m.content) ? m.content : []) {
@@ -87,6 +102,28 @@ function foldClaude(run, entries, seen, usage) {
       }
     }
   }
+}
+
+// One Claude Code transcript and the subagent transcripts in the folder beside it.
+export function readClaudeSession(path) {
+  const id = basename(path, '.jsonl');
+  const run = newRun('claude-code', id);
+  run.path = path;
+  const seen = new Set();
+  foldClaude(run, readLines(path), seen, null);
+  const subagents = join(dirname(path), id, 'subagents');
+  if (existsSync(subagents)) {
+    for (const f of readdirSync(subagents).filter((x) => x.endsWith('.jsonl'))) {
+      const metaFile = join(subagents, f.replace(/\.jsonl$/, '.meta.json'));
+      const meta = existsSync(metaFile) ? JSON.parse(readFileSync(metaFile, 'utf8')) : {};
+      const agent = { name: meta.agentType || 'subagent', model: null, usage: emptyUsage() };
+      const entries = readLines(join(subagents, f));
+      agent.model = entries.find((e) => e.type === 'assistant' && e.message?.model && e.message.model !== '<synthetic>')?.message.model || meta.model || null;
+      foldClaude(run, entries, seen, agent.usage);
+      run.agents.push(agent);
+    }
+  }
+  return run;
 }
 
 export function readClaudeRuns(claudeHome, since) {
@@ -99,23 +136,7 @@ export function readClaudeRuns(claudeHome, since) {
     for (const file of readdirSync(dir).filter((f) => f.endsWith('.jsonl'))) {
       const path = join(dir, file);
       if (statSync(path).mtimeMs < since.getTime()) continue;
-      const id = basename(file, '.jsonl');
-      const run = newRun('claude-code', id);
-      run.path = path;
-      const seen = new Set();
-      foldClaude(run, readLines(path), seen, null);
-      const subagents = join(dir, id, 'subagents');
-      if (existsSync(subagents)) {
-        for (const f of readdirSync(subagents).filter((x) => x.endsWith('.jsonl'))) {
-          const metaFile = join(subagents, f.replace(/\.jsonl$/, '.meta.json'));
-          const meta = existsSync(metaFile) ? JSON.parse(readFileSync(metaFile, 'utf8')) : {};
-          const agent = { name: meta.agentType || 'subagent', model: null, usage: emptyUsage() };
-          const entries = readLines(join(subagents, f));
-          agent.model = entries.find((e) => e.type === 'assistant' && e.message?.model && e.message.model !== '<synthetic>')?.message.model || meta.model || null;
-          foldClaude(run, entries, seen, agent.usage);
-          run.agents.push(agent);
-        }
-      }
+      const run = readClaudeSession(path);
       if (run.usage.size) runs.push(run);
     }
   }
@@ -140,6 +161,7 @@ export function readCopilotRuns(copilotHome, since) {
       if (e.type === 'session.usage_record' && e.data?.usage) {
         const u = copilotUsage(e.data.usage);
         addModelUsage(run.usage, e.data.usage.model, u);
+        addDaily(run, e.timestamp ? Date.parse(e.timestamp) : state.last, e.data.usage.model, u, Boolean(e.agentId));
         if (e.agentId) addUsage(byAgent.get(e.agentId) || byAgent.set(e.agentId, emptyUsage()).get(e.agentId), u);
       }
       if (e.type === 'tool.execution_complete' || e.type === 'assistant.message') linksIn(run, JSON.stringify(e.data || {}));
@@ -160,6 +182,7 @@ export function summarize(runs, prices, now = Date.now()) {
   for (const run of runs) {
     run.live = !run.ended && now - (run.last || 0) < LIVE_MS;
     run.tokens = [...run.usage.values()].reduce((n, u) => n + tokensOf(u), 0);
+    run.cacheHit = cacheHit([...run.usage.values()].reduce((sum, u) => addUsage(sum, u), emptyUsage()));
     const costs = [...run.usage].map(([model, u]) => priceOf(model, u, prices));
     run.cost = costs.some((c) => c !== null) ? costs.reduce((a, c) => a + (c || 0), 0) : null;
     run.unpriced = costs.some((c) => c === null);
@@ -199,7 +222,7 @@ export function renderLog({ runs, totals }, ui, since) {
       if (r.reply) out.push(`     ${ui.dim('last')}  ${ui.clip(gist(r.reply), width - 10)}${r.waiting ? `  ${ui.tone('warn', '? waiting on you')}` : ''}`);
       for (const link of r.links) out.push(`     ${ui.dim('MR')}    ${link}`);
       const agents = Object.entries(Object.groupBy(r.agents, (a) => `${a.name}${a.model ? ` on ${a.model}` : ''}`)).map(([k, list]) => (list.length > 1 ? `${k} ×${list.length}` : k));
-      const facts = [`${count(r.tokens)} tokens`, r.files.size && `${r.files.size} ${r.files.size === 1 ? 'file' : 'files'} changed`, agents.length && `subagents: ${agents.join(', ')}`].filter(Boolean).join('  ·  ');
+      const facts = [`${count(r.tokens)} tokens${r.cacheHit === null ? '' : `, ${Math.round(r.cacheHit * 100)}% cached`}`, r.files.size && `${r.files.size} ${r.files.size === 1 ? 'file' : 'files'} changed`, agents.length && `subagents: ${agents.join(', ')}`].filter(Boolean).join('  ·  ');
       out.push(`     ${ui.dim(ui.clip(facts, width - 5))}`, '');
     }
   }
@@ -220,7 +243,7 @@ export function log({ ui, json, flags, claudeHome, copilotHome, prices, cwd, now
     .filter((r) => !here || (r.cwd || '').replace(/\\/g, '/').toLowerCase().startsWith(here));
   const summary = summarize(runs, prices, now.getTime());
   if (json) {
-    const plain = (r) => ({ ...r, links: [...r.links], files: [...r.files], usage: Object.fromEntries(r.usage) });
+    const plain = ({ days, ...r }) => ({ ...r, links: [...r.links], files: [...r.files], usage: Object.fromEntries(r.usage) });
     return `${JSON.stringify({ since: since.toISOString(), runs: summary.runs.map(plain), totals: summary.totals }, null, 2)}\n`;
   }
   return `${renderLog(summary, ui, since).join('\n')}\n`;
