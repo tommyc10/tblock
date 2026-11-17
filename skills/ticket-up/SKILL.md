@@ -1,13 +1,13 @@
 ---
 name: ticket-up
-description: "Draft GitHub or GitLab tickets for finished work and its follow-ups. Use when the user asks to make or raise tickets, or to set up tickets for a project."
+description: "Draft GitHub or GitLab tickets: one for planned work before it starts, or ones for finished work and its follow-ups. Use when the user asks to make or raise tickets, to write up work before building it, or to set up tickets for a project."
 ---
 
 # Ticket up
 
-Record finished work as tickets, written from what actually happened in the task. Skip it for a one-line fix, a question, or a task that changed nothing.
+Write up planned work as a ticket before it starts (Intake), or record finished work as tickets, written from what actually happened in the task (Draft). Skip it for a one-line fix, a question, or a task that changed nothing.
 
-Set up the project yourself, because it needs the user. When delegation is available, hand the Draft section to the **threepio** agent with this file's absolute path, the goal, the branch or diff, and the checks that ran with their results. Run Create yourself, and show the user its drafts unchanged. Pass on its remark too, if you like.
+Set up the project yourself, because it needs the user. When delegation is available, hand Intake or Draft to the **threepio** agent with this file's absolute path, the mode (`intake` or `finish`), and the goal. For `finish`, add the branch or diff and the checks that ran with their results. Run Create yourself, and show the user its drafts unchanged. Pass on its remark too, if you like.
 
 ## Set up a project
 
@@ -22,6 +22,23 @@ Look for `.tblock/tickets.json` in the project root. If it is missing, ask the u
 ```
 
 `labels` go on every ticket. `followUpLabel` goes on follow-ups only. `weightScale` is the team's own scale for GitLab weights. This file is what makes tblock-mode offer tickets at the end of a task, so projects without it never see the prompt.
+
+## Intake
+
+A ticket for work not started yet. Its acceptance criteria are the contract: the build works to them, and review checks the branch against them.
+
+1. Resolve the forge and read any template, as in Draft step 1.
+2. Search for a duplicate, as in Draft step 2. If one exists, stop and show it, since the work belongs on that ticket.
+3. Draft the ticket:
+   - **Title:** the outcome, imperative and plain, such as "Export a customer's orders as CSV".
+   - `## Why`: the user's goal and the problem, in 1 to 2 sentences.
+   - `## Acceptance`: one checkbox per criterion, written `- [ ] AC-1 <behaviour> (evidence: <kind>)`. Each one is behaviour someone can check from outside the code, such as a command and its output, a request and its response, or what a user sees. The kind is `test`, `command`, `screenshot`, or `manual`; prefer `test`. Once the ticket exists, IDs never change, because later work cites them.
+   - `## Out of scope`: what a reader might expect that this ticket won't do, with a ticket link where one exists.
+   - **Weight:** from `weightScale`, your estimate of the work.
+4. Read the code the work will touch, so each criterion names real commands, routes, or fields. Don't settle what the goal leaves open, such as a format, a limit, or who may call it. Ask the user instead.
+5. Write it with [technical-writing](../technical-writing/SKILL.md), then [unslop](../unslop/SKILL.md).
+
+Then run Create. When the work is done, Draft finds this ticket in its step 2 and comments on it.
 
 ## Draft
 

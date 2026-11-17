@@ -1,0 +1,6 @@
+[
+  { "id": "o-101", "customer": "c-1", "placedAt": "2026-09-02", "total": 42.5, "status": "shipped" },
+  { "id": "o-102", "customer": "c-2", "placedAt": "2026-09-14", "total": 12, "status": "open" },
+  { "id": "o-103", "customer": "c-1", "placedAt": "2026-10-01", "total": 7.25, "status": "open" },
+  { "id": "o-104", "customer": "c-1", "placedAt": "2026-08-19", "total": 100, "status": "refunded" }
+]

@@ -52,6 +52,10 @@ lists the copilot models vs code's picker offers your plan, and suggests tiers. 
 
 turns on the two hooks the plugin ships. the harness then asks you before an agent pushes, opens a pr or mr, files a ticket or publishes, so the pause no longer rests on the agent alone. each new session also starts knowing its roles and what the repo has set up. `tblock guard off` undoes it. tested in claude code; whether copilot loads a plugin's `hooks/hooks.json` is not yet checked.
 
+### `tblock grant`
+
+a punch-it run's one yes. with the guard on, running it is itself an ask, and approving it lets the current branch be pushed, its mr or pr opened and commented on, and its ticket created, without asking again. it lasts 4 hours (`--hours=1` to `24`), lives in `~/.tblock/grants.json`, and refuses a default branch. it never covers a merge, a force-push, another branch, or a command that changes folder or names another repo. `tblock grant off` ends it early.
+
 ## sessions
 
 ### `tblock watch`

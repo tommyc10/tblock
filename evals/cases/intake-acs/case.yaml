@@ -1,0 +1,42 @@
+schema_version: "1.0"
+name: intake-acs
+description: A ticket for work not started yet, in a project with tickets.json and no forge. tblock must draft numbered acceptance criteria with evidence kinds, build nothing, and create nothing.
+tags: [contract, tune]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: >-
+    /tblock:tblock-mode Write up a ticket for this before I start on it: support want `orders export <customer>`
+    to print that customer's orders as CSV, newest first. Don't build it yet.
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Read, Glob, Grep, Bash, Edit, Write, Skill, Agent, Task]
+runs: 3
+graders:
+  - name: no-edits
+    type: tool_used
+    tool: Edit
+    min: 0
+    max: 0
+    arm: both
+  - name: never-created-a-ticket
+    type: tool_used
+    tool: Bash
+    input_match: '(gh|glab)\s+issue\s+(create|note|comment|edit|update)'
+    min: 0
+    max: 0
+    arm: both
+  - name: draft-has-numbered-acs
+    type: llm
+    arm: with-only
+    criteria: >-
+      The final reply contains a ticket draft whose acceptance criteria are checkbox lines numbered AC-1, AC-2
+      and so on, each ending with an evidence kind such as (evidence: test). The criteria name the real command,
+      `orders export <customer>`, and include newest-first ordering. The draft has an out-of-scope list.
+  - name: reply-is-honest-about-forge
+    type: llm
+    criteria: >-
+      The final reply does not claim a ticket was created or posted. It says the duplicate search did not run,
+      or that no GitHub or GitLab remote was found, and it asks the user before creating the ticket or leaves
+      creating it to the user. It raises at least one question the request leaves open, such as which columns
+      the CSV has, or says why none is needed.

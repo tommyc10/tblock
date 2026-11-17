@@ -7,6 +7,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, wri
 import { homedir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { addGrant, gitWhere, revokeGrant } from './grant.mjs';
 import { handoff } from './handoff.mjs';
 import { addToPath, binDir, launcherTarget, onPath, refreshLauncher, removeFromPath, shellProfile } from './launcher.mjs';
 import { log } from './log.mjs';
@@ -26,7 +27,7 @@ const SETTINGS_FILE = join(COPILOT_HOME, 'settings.json');
 const PRESETS = JSON.parse(readFileSync(join(PLUGIN, 'presets.json'), 'utf8'));
 
 // `--since today` reads as `--since=today`, the way most CLIs take a value. --replay's value is optional, so it stays out.
-const VALUED = new Set(['--since', '--by', '--session', '--out', '--harness', '--from', '--tools', '--effort']);
+const VALUED = new Set(['--since', '--by', '--session', '--out', '--harness', '--from', '--tools', '--effort', '--hours']);
 const argv = process.argv.slice(2).reduce((out, arg, i, all) => {
   if (out.skip) return { ...out, skip: false };
   const next = all[i + 1];
@@ -840,6 +841,26 @@ function guard(to) {
   say(ui.hint(`tblock guard ${file.meta.guard ? 'off' : 'on'}`), ui.dim('    new sessions pick it up'));
 }
 
+// `tblock grant` is a punch-it run's one yes: with the guard on, running it is an ask, and once approved the
+// guard stops asking before this branch's pushes, its MR, and its ticket. `grant off` ends it early.
+function grantCommand(to, flags) {
+  const here = gitWhere(process.cwd());
+  if (to === 'off') {
+    const n = revokeGrant(homedir(), here);
+    if (json) return console.log(JSON.stringify({ revoked: n }));
+    return say(ui.status(n ? 'PASS' : 'SKIP', 'Grant', n ? `ended for ${here.branch}` : `none for ${here.branch}`, 8), '');
+  }
+  if (to) throw new Error(`grant takes off or nothing, not "${to}"`);
+  const hours = Number(flags.find((f) => f.startsWith('--hours='))?.slice('--hours='.length) || 4);
+  if (!(hours > 0 && hours <= 24)) throw new Error('--hours takes a number from 1 to 24');
+  const g = addGrant(homedir(), here, hours);
+  if (json) return console.log(JSON.stringify(g));
+  say(ui.status('PASS', 'Grant', `${g.branch} until ${g.until.slice(11, 16)} UTC`, 8), '');
+  say(ui.dim('  The guard lets this branch be pushed, its MR opened and babysat, and its ticket created.'));
+  say(ui.dim('  It still asks before a merge, a force-push, another branch, or anything else.'), '');
+  say(ui.hint('tblock grant off'), ui.dim('    ends it early'));
+}
+
 // `tblock command on` writes the launcher and puts its folder on PATH, once; off undoes both.
 function shellCommand(to) {
   if (to && to !== 'on' && to !== 'off') throw new Error(`command takes on or off, not "${to}"`);
@@ -865,6 +886,7 @@ const COMMANDS = [
   ['check', [
     ['doctor', 'check the install, roles, Copilot agents, and git tools'],
     ['guard on', 'have the harness ask before a push, PR, MR, ticket, or publish (guard off undoes it)'],
+    ['grant', "let a punch-it run push this branch and open its MR without asking again, for 4 hours (--hours, grant off)"],
     ['command on', 'add a `tblock` command to your terminal that follows updates (command off undoes it)'],
   ]],
   ['watch', [
@@ -999,6 +1021,9 @@ try {
     applyPreset(sub, rest);
   } else if (command === 'guard') {
     guard(sub);
+  } else if (command === 'grant') {
+    if (!json) process.stdout.write(ui.header('grant'));
+    grantCommand(sub?.startsWith('--') ? undefined : sub, args.slice(1));
   } else if (command === 'command') {
     shellCommand(sub);
   } else if (command === 'log') {
@@ -1026,7 +1051,7 @@ try {
   } else if (command === 'handoff') {
     process.stdout.write(handoff({ json, flags: args.slice(1), cwd: process.cwd(), ...homes }));
   } else {
-    const guess = nearest(command, ['help', 'doctor', 'watch', 'roles', 'models', 'tiers', 'preset', 'guard', 'command', 'log', 'handoff', 'usage', 'statusline']);
+    const guess = nearest(command, ['help', 'doctor', 'watch', 'roles', 'models', 'tiers', 'preset', 'guard', 'grant', 'command', 'log', 'handoff', 'usage', 'statusline']);
     throw new Error(`unknown command "${args.join(' ')}".${guess ? ` Did you mean tblock ${guess}?` : ''} Run tblock help to see the commands.`);
   }
 } catch (error) {
