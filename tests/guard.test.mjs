@@ -6,11 +6,11 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { commandOf, preTool, sessionStart } from './hook.mjs';
-import { outwardAction } from './outward.mjs';
-import { parseRoles } from './roles.mjs';
+import { commandOf, preTool, sessionStart } from '../bin/hook.mjs';
+import { outwardAction } from '../bin/outward.mjs';
+import { parseRoles } from '../bin/roles.mjs';
 
-const BIN = dirname(fileURLToPath(import.meta.url));
+const BIN = join(dirname(fileURLToPath(import.meta.url)), '..', 'bin');
 const on = parseRoles('# guard: on\n# preset: high\n\n## claude-code\ncode: sonnet @ medium\nreviewers: sonnet @ high, opus @ high\n');
 const off = parseRoles('## claude-code\ncode: sonnet @ medium\n');
 const bash = (command) => ({ tool_name: 'Bash', tool_input: { command } });
@@ -62,7 +62,7 @@ test('the hook script and the guard switch work end to end', () => {
 });
 
 test('a grant covers the task branch\'s push, its MR, its replies, and its ticket, and nothing else', async () => {
-  const { grantCovers } = await import('./grant.mjs');
+  const { grantCovers } = await import('../bin/grant.mjs');
   for (const cmd of ['git push', 'git push -u origin feat/x', 'git push origin HEAD', 'git add -A && git commit -m x && git push',
     'gh pr create --fill', 'glab mr create --source-branch feat/x --target-branch main --yes', 'gh pr comment 12 --body-file r.md', 'glab mr note 4 -m done', 'gh issue create --title t --body-file b.md']) {
     assert.equal(grantCovers(cmd, 'feat/x'), true, cmd);
@@ -75,7 +75,7 @@ test('a grant covers the task branch\'s push, its MR, its replies, and its ticke
 });
 
 test('with a live grant for this repo and branch, the guard lets covered commands through and asks for the rest', async () => {
-  const { addGrant } = await import('./grant.mjs');
+  const { addGrant } = await import('../bin/grant.mjs');
   const home = mkdtempSync(join(tmpdir(), 'tblock-grant-'));
   const here = { repo: '/r', branch: 'feat/x', base: 'main' };
   const where = () => here;

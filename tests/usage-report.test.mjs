@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-const CLI = join(dirname(fileURLToPath(import.meta.url)), 'tblock.mjs');
+const CLI = join(dirname(fileURLToPath(import.meta.url)), '..', 'bin', 'tblock.mjs');
 const today = new Date();
 const at = (dayOffset, hour) => new Date(today.getFullYear(), today.getMonth(), today.getDate() + dayOffset, hour).toISOString();
 const assistant = (id, model, usage, timestamp, extra = {}) => ({ type: 'assistant', timestamp, cwd: '/work/shop', message: { id, model, usage, content: [] }, ...extra });

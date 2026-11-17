@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { colourMode, firstRun, frame, markSeen } from './splash.mjs';
+import { colourMode, firstRun, frame, markSeen } from '../bin/splash.mjs';
 
 const tty = { isTTY: true };
 

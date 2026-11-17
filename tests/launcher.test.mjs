@@ -6,9 +6,9 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { addToPath, launcherTarget, onPath, refreshLauncher, removeFromPath, shellProfile } from './launcher.mjs';
+import { addToPath, launcherTarget, onPath, refreshLauncher, removeFromPath, shellProfile } from '../bin/launcher.mjs';
 
-const BIN = dirname(fileURLToPath(import.meta.url));
+const BIN = join(dirname(fileURLToPath(import.meta.url)), '..', 'bin');
 const temp = () => mkdtempSync(join(tmpdir(), 'tblock-launcher-'));
 
 // A plugin folder with just enough for the launcher: a version and a CLI.

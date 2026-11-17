@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-const CLI = join(dirname(fileURLToPath(import.meta.url)), 'tblock.mjs');
+const CLI = join(dirname(fileURLToPath(import.meta.url)), '..', 'bin', 'tblock.mjs');
 const PLUGIN = join(dirname(CLI), '..');
 
 function sandbox(stubs = {}, extraEnv = {}) {
@@ -428,7 +428,7 @@ test('watch reads a Claude Code session: the prompt, each subagent with its mode
 test('watch lists every live session as a tab and folds a run of one tool into one line', async () => {
   const { writeWatchSession } = await import('./fixtures/watch-session.mjs');
   const { claudeSessionRecords, writeClaudeSession } = await import('./fixtures/watch-claude-session.mjs');
-  const { foldSteps } = await import('./watch.mjs');
+  const { foldSteps } = await import('../bin/watch.mjs');
   const { home, cli } = sandbox({}, {});
   // Start five hours back: a fixed start date makes the wait grow, which shortens the tab label until the match fails.
   writeClaudeSession(join(home, '.claude'), claudeSessionRecords({ start: Date.now() - 5 * 3600_000 }));
@@ -452,7 +452,7 @@ test('a Claude Code turn stays busy until its reply text lands, not when its thi
 });
 
 test('the watch reader keeps a half-written line until the rest arrives', async () => {
-  const { createReader } = await import('./watch.mjs');
+  const { createReader } = await import('../bin/watch.mjs');
   const { appendFileSync } = await import('node:fs');
   const file = join(mkdtempSync(join(tmpdir(), 'tblock-log-')), 'events.jsonl');
   writeFileSync(file, '{"type":"a"}\n{"type":');
@@ -480,7 +480,7 @@ test('watch shows what the agent said, what broke, its context, and the lines ea
 });
 
 test('watch keys: arrows select a step, enter opens it, esc steps back one layer, then quits', async () => {
-  const { onKey, initialView } = await import('./watch.mjs');
+  const { onKey, initialView } = await import('../bin/watch.mjs');
   const steps = [{ key: 1 }, { key: 2 }, { key: 3 }];
   const press = (view, key, tabs = 1) => onKey(view, key, { steps, tabs });
   let { view } = press(initialView(), '\x1b[A');
@@ -501,9 +501,9 @@ test('watch keys: arrows select a step, enter opens it, esc steps back one layer
 
 test('watch opens a step to its diff, splits into two panes when wide, and keeps quit in the footer', async () => {
   const { claudeSessionRecords, writeClaudeSession } = await import('./fixtures/watch-claude-session.mjs');
-  const { createClaudeSource, listClaudeSessions } = await import('./watch-claude.mjs');
-  const { createState, applyEvent, render, selectable, initialView } = await import('./watch.mjs');
-  const { createUI } = await import('./ui.mjs');
+  const { createClaudeSource, listClaudeSessions } = await import('../bin/watch-claude.mjs');
+  const { createState, applyEvent, render, selectable, initialView } = await import('../bin/watch.mjs');
+  const { createUI } = await import('../bin/ui.mjs');
   const home = mkdtempSync(join(tmpdir(), 'tblock-watch-'));
   writeClaudeSession(join(home, '.claude'), claudeSessionRecords({ trouble: true }));
   const s = listClaudeSessions(join(home, '.claude', 'projects'))[0];
@@ -523,8 +523,8 @@ test('watch opens a step to its diff, splits into two panes when wide, and keeps
 
 test('watch replays a session: seeking back and forward rebuilds the same state', async () => {
   const { claudeSessionRecords, writeClaudeSession } = await import('./fixtures/watch-claude-session.mjs');
-  const { createClaudeSource, listClaudeSessions } = await import('./watch-claude.mjs');
-  const { createState, createReplay } = await import('./watch.mjs');
+  const { createClaudeSource, listClaudeSessions } = await import('../bin/watch-claude.mjs');
+  const { createState, createReplay } = await import('../bin/watch.mjs');
   const home = mkdtempSync(join(tmpdir(), 'tblock-watch-'));
   writeClaudeSession(join(home, '.claude'), claudeSessionRecords({ trouble: true }));
   const s = listClaudeSessions(join(home, '.claude', 'projects'))[0];
@@ -540,7 +540,7 @@ test('watch replays a session: seeking back and forward rebuilds the same state'
 });
 
 test('watch picks a notifier per platform and a reason for each failure', async () => {
-  const { notifyCommand, errorLine, toolLabel } = await import('./watch.mjs');
+  const { notifyCommand, errorLine, toolLabel } = await import('../bin/watch.mjs');
   assert.equal(notifyCommand('win32', 't', 'b')[0], 'powershell.exe');
   assert.match(notifyCommand('win32', "it's", 'b')[1].at(-1), /CreateTextNode\('it''s'\)/, 'quotes are escaped for PowerShell');
   assert.deepEqual(notifyCommand('darwin', 'T', 'B'), ['osascript', ['-e', 'display notification "B" with title "T"']]);
@@ -554,8 +554,8 @@ test('watch picks a notifier per platform and a reason for each failure', async 
 });
 
 test('watch tells the story, lists its keys, and counts what git and the project folder hold', async () => {
-  const { createState, applyEvent, render, onKey, initialView, parseGit, trouble } = await import('./watch.mjs');
-  const { createUI } = await import('./ui.mjs');
+  const { createState, applyEvent, render, onKey, initialView, parseGit, trouble } = await import('../bin/watch.mjs');
+  const { createUI } = await import('../bin/ui.mjs');
   const ui = createUI({ color: false, version: 't', env: {} });
   const state = createState('s1', null);
   const at = (n) => new Date(Date.UTC(2026, 0, 1, 12, 0, n)).toISOString();
@@ -593,8 +593,8 @@ test('watch tells the story, lists its keys, and counts what git and the project
 });
 
 test('watch folds earlier tasks to one line and opens the latest as ⏺ steps', async () => {
-  const { createState, applyEvent, render } = await import('./watch.mjs');
-  const { createUI } = await import('./ui.mjs');
+  const { createState, applyEvent, render } = await import('../bin/watch.mjs');
+  const { createUI } = await import('../bin/ui.mjs');
   const ui = createUI({ color: false, version: 't', env: {} });
   const state = createState('s2', null);
   const at = (n) => new Date(Date.UTC(2026, 0, 1, 12, 0, n)).toISOString();

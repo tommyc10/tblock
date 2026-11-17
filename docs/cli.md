@@ -89,7 +89,7 @@ a live view of the newest claude code or copilot session (cli, or vs code's agen
 | `?` | every key |
 | `q` | quit |
 
-`--replay[=<id prefix>]` plays a recorded session back (space pauses, `←` `→` seek, `[` `]` jump prompts, `+` `-` speed). `--session=<id prefix>` pins one session, and `--once` prints a snapshot: the screen you'd see live in a terminal, and every task's steps when piped to a file or an agent. preview it with `node bin/fixtures/watch-demo.mjs`.
+`--replay[=<id prefix>]` plays a recorded session back (space pauses, `←` `→` seek, `[` `]` jump prompts, `+` `-` speed). `--session=<id prefix>` pins one session, and `--once` prints a snapshot: the screen you'd see live in a terminal, and every task's steps when piped to a file or an agent. preview it with `node tests/fixtures/watch-demo.mjs`.
 
 ### `tblock log`
 

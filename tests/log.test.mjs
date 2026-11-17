@@ -7,9 +7,9 @@ import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { watchSessionEvents, writeWatchSession } from './fixtures/watch-session.mjs';
-import { parseSince } from './log.mjs';
+import { parseSince } from '../bin/log.mjs';
 
-const CLI = join(dirname(fileURLToPath(import.meta.url)), 'tblock.mjs');
+const CLI = join(dirname(fileURLToPath(import.meta.url)), '..', 'bin', 'tblock.mjs');
 const NOW = Date.now();
 const iso = (minutesAgo) => new Date(NOW - minutesAgo * 60000).toISOString();
 
