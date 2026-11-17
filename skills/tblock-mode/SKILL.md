@@ -76,6 +76,7 @@ Choose the most specific intent below and read only the matching playbook or ski
 | Write or modify a skill, principle, or playbook | [Authoring a skill](playbooks/authoring-a-skill.md) |
 | Prepare and open a merge request or pull request | [Opening an MR](playbooks/opening-an-mr.md) |
 | Drive a PR or MR to merge-ready: conflicts, review threads, CI | [Babysit](playbooks/babysit.md) |
+| "Punch it": take an idea or a ticket all the way to a merge-ready MR, asking once | [Punch it](playbooks/punch-it.md) |
 | Review a teammate's MR or PR and draft the comments | [Reviewing a teammate's MR](playbooks/review-an-mr.md) |
 | Diagnose a live symptom (leak, spin, hang, glitch) from instrumentation | [Runtime forensics](playbooks/runtime-forensics.md) |
 | Diagnose a captured profile, trace, spindump, or heap snapshot | [Trace forensics](playbooks/trace-forensics.md) |

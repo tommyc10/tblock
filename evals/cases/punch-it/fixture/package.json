@@ -1,0 +1,11 @@
+{
+  "name": "orders",
+  "version": "1.0.0",
+  "type": "module",
+  "bin": {
+    "orders": "src/cli.js"
+  },
+  "scripts": {
+    "test": "node --test checks/"
+  }
+}

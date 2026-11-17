@@ -8,6 +8,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { GRANT_COMMAND, gitWhere, grantCovers, grantExists, liveGrant, readGrants } from './grant.mjs';
 import { refreshLauncher } from './launcher.mjs';
 import { outwardAction } from './outward.mjs';
 import { formatEntry, readRoles } from './roles.mjs';
@@ -25,17 +26,24 @@ export function commandOf(input = {}) {
   return [args.command, args.cmd, args.script].find((v) => typeof v === 'string') || '';
 }
 
-export function preTool(input, file) {
+const ask = (reason) => ({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'ask', permissionDecisionReason: reason } });
+
+// `where` finds the repo and branch the command runs in; a test passes its own.
+export function preTool(input, file, home = homedir(), where = gitWhere) {
   if (!file?.meta.guard) return null;
-  const action = outwardAction(commandOf(input));
+  const command = commandOf(input);
+  if (GRANT_COMMAND.test(command)) {
+    return ask('tblock guard: "tblock grant" lets this run push its own branch, open and babysit its MR, and create its ticket without asking again, for a few hours. It never covers a merge, a force-push, or another branch. Approving it is your yes for the run.');
+  }
+  const action = outwardAction(command);
   if (!action) return null;
-  return {
-    hookSpecificOutput: {
-      hookEventName: 'PreToolUse',
-      permissionDecision: 'ask',
-      permissionDecisionReason: `tblock guard: "${action}" leaves this machine. tblock always pauses for that, so this one is yours to approve.`,
-    },
-  };
+  if (grantExists(home)) {
+    try {
+      const here = where(input.cwd || process.cwd());
+      if (liveGrant(readGrants(home), here) && grantCovers(command, here.branch)) return null;
+    } catch { /* no repo or no git: ask as usual */ }
+  }
+  return ask(`tblock guard: "${action}" leaves this machine. tblock always pauses for that, so this one is yours to approve.`);
 }
 
 export function sessionStart(input, file, harness, root = PLUGIN) {

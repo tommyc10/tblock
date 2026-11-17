@@ -83,7 +83,9 @@ for (const c of result.cases) {
   const caseDir = resolve(root, c.dir);
   const expect = existsSync(join(caseDir, 'expect.json')) ? JSON.parse(readFileSync(join(caseDir, 'expect.json'), 'utf8')) : {};
   // Held-out cases carry the heldout tag. No tuning decision may read their scores.
-  const split = /^tags:.*\bheldout\b/m.test(readFileSync(join(caseDir, 'case.yaml'), 'utf8')) ? 'heldout' : 'tune';
+  const yaml = readFileSync(join(caseDir, 'case.yaml'), 'utf8');
+  const split = /^tags:.*\bheldout\b/m.test(yaml) ? 'heldout' : 'tune';
+  const grantsPush = /^tags:.*\bgrants-push\b/m.test(yaml);
   for (const [arm, runs] of Object.entries(c.arms || {})) {
     runs.forEach((r, i) => {
       const row = { case: c.name, split, arm, run: i + 1, native: r.score, error: r.error, cost: r.costUsd, seconds: r.durationSeconds, checks: [] };
@@ -95,7 +97,7 @@ for (const c of result.cases) {
         const cwd = join(kept, 'files');
         const transcript = [join(kept, 'transcript.jsonl')].find((f) => existsSync(f));
         const trace = parseTrace(readFileSync([join(kept, 'trace.jsonl'), transcript].find((f) => f && existsSync(f)), 'utf8'));
-        row.checks.push(...checkRules(trace, { principles, plugin: arm === 'with' }));
+        row.checks.push(...checkRules(trace, { principles, plugin: arm === 'with', grantsPush }));
         const diff = diffDirs(join(caseDir, 'fixture'), cwd);
         row.diff = { files: diff.changed.length, added: diff.added, removed: diff.removed };
         if (expect.touch) row.checks.push(checkScope(diff.changed, expect.touch));
