@@ -13,6 +13,7 @@ import { addToPath, binDir, launcherTarget, onPath, refreshLauncher, removeFromP
 import { log } from './log.mjs';
 import { HARNESSES, HARNESS_NAME, emptyFile, formatEntry, formatRoles, parseEntry, readRoles, rolesPath, runsInClaudeCode, section } from './roles.mjs';
 import { createUI } from './ui.mjs';
+import { firstRun, markSeen, play as playSplash } from './splash.mjs';
 import { setStatusLine, statusLine } from './statusline.mjs';
 import { usageCommand } from './usage-report.mjs';
 import { loadPrices } from './usage.mjs';
@@ -886,6 +887,7 @@ const COMMANDS = [
   ['check', [
     ['doctor', 'check the install, roles, Copilot agents, and git tools'],
     ['guard on', 'have the harness ask before a push, PR, MR, ticket, or publish (guard off undoes it)'],
+    ['splash', 'play the hyperspace jump again (it plays once, the first time you run tblock in a terminal)'],
     ['grant', "let a punch-it run push this branch and open its MR without asking again, for 4 hours (--hours, grant off)"],
     ['command on', 'add a `tblock` command to your terminal that follows updates (command off undoes it)'],
   ]],
@@ -969,7 +971,13 @@ const homes = {
   copilotHome: COPILOT_HOME,
 };
 try {
-  if (!command || command === 'help' || command === '--help') {
+  if (command === 'splash' || firstRun({ home: homedir(), env: process.env, out: process.stdout, json })) {
+    await playSplash({ version: VERSION });
+    markSeen(homedir());
+  }
+  if (command === 'splash') {
+    // played above
+  } else if (!command || command === 'help' || command === '--help') {
     showHelp();
   } else if (command === '--version') {
     console.log(VERSION);
@@ -1051,7 +1059,7 @@ try {
   } else if (command === 'handoff') {
     process.stdout.write(handoff({ json, flags: args.slice(1), cwd: process.cwd(), ...homes }));
   } else {
-    const guess = nearest(command, ['help', 'doctor', 'watch', 'roles', 'models', 'tiers', 'preset', 'guard', 'grant', 'command', 'log', 'handoff', 'usage', 'statusline']);
+    const guess = nearest(command, ['help', 'doctor', 'watch', 'roles', 'models', 'tiers', 'preset', 'guard', 'grant', 'splash', 'command', 'log', 'handoff', 'usage', 'statusline']);
     throw new Error(`unknown command "${args.join(' ')}".${guess ? ` Did you mean tblock ${guess}?` : ''} Run tblock help to see the commands.`);
   }
 } catch (error) {

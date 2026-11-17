@@ -1,4 +1,4 @@
-// A tiny terminal canvas for the tblock art prototypes. Three stacked layers per cell:
+// A tiny terminal canvas for tblock's splash, trimmed from the art prototypes. Three stacked layers per cell:
 //   text  (one glyph, fg, optional bg)        – wins over everything
 //   braille (2×4 dots per cell, one colour)   – thin lines, webs, traces
 //   pixels  (2 per cell via ▀/▄, plus a colour-only glow layer underneath)
@@ -6,14 +6,9 @@
 
 export const EMBER = [[255, 77, 109], [255, 122, 69], [255, 196, 87]];
 export const ACCENT = [255, 112, 84];
-export const FAMILY = { claude: [222, 128, 96], gpt: [52, 211, 153], gemini: [96, 165, 250] };
-export const EFFORT_RAMP = [[94, 234, 212], [96, 165, 250], [167, 139, 250], [244, 114, 182], [255, 77, 109]];
-export const STATUS = { PASS: [74, 222, 128], WARN: [251, 191, 36], FAIL: [248, 113, 113] };
-export const HEAT = [[24, 6, 10], [110, 16, 28], [255, 77, 109], [255, 122, 69], [255, 196, 87], [255, 248, 225]];
 export const WHITE = [255, 255, 255];
 export const DIM = [110, 104, 112];
 export const FAINT = [64, 60, 70];
-export const EFFORTS = ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'];
 
 export const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 export const lerp = (a, b, t) => a + (b - a) * t;
@@ -30,9 +25,6 @@ export const seg = (t, a, b) => clamp((t - a) / (b - a));
 export const ease = {
   out: (t) => 1 - (1 - t) ** 3,
   in: (t) => t * t * t,
-  inOut: (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2),
-  back: (t) => 1 + 2.70158 * (t - 1) ** 3 + 1.70158 * (t - 1) ** 2,
-  expo: (t) => (t >= 1 ? 1 : 1 - 2 ** (-10 * t)),
 };
 // Deterministic noise so every scene is a pure function of time: the still frame is just draw(dur).
 export const hash = (a, b = 0) => {
@@ -40,19 +32,6 @@ export const hash = (a, b = 0) => {
   h = Math.imul(h ^ (h >>> 13), 1274126177);
   h ^= h >>> 16;
   return (h >>> 0) / 4294967296;
-};
-export const noise = (x, seed = 0) => {
-  const i = Math.floor(x);
-  const f = x - i;
-  const s = f * f * (3 - 2 * f);
-  return lerp(hash(i, seed), hash(i + 1, seed), s);
-};
-export const noise2 = (x, y, seed = 0) => {
-  const xi = Math.floor(x); const yi = Math.floor(y);
-  const xf = x - xi; const yf = y - yi;
-  const sx = xf * xf * (3 - 2 * xf); const sy = yf * yf * (3 - 2 * yf);
-  const n = (a, b) => hash(a * 7919 + b, seed);
-  return lerp(lerp(n(xi, yi), n(xi + 1, yi), sx), lerp(n(xi, yi + 1), n(xi + 1, yi + 1), sx), sy);
 };
 
 const BRAILLE = [[0x01, 0x08], [0x02, 0x10], [0x04, 0x20], [0x40, 0x80]]; // [row][col]
@@ -112,27 +91,11 @@ export class Frame {
     if (!c || x < 0 || y < 0 || x >= this.w || y >= this.ph) return;
     this.px[y * this.w + x] = c;
   }
-  // A pixel that sits in front of braille (clears the dots in its cell).
-  pfront(x, y, c) {
-    this.pset(x, y, c);
-    x = Math.round(x); y = Math.round(y);
-    if (x >= 0 && y >= 0 && x < this.w && y < this.ph) this.br[(y >> 1) * this.w + x] = 0;
-  }
-  pget(x, y) {
-    x = Math.round(x); y = Math.round(y);
-    if (x < 0 || y < 0 || x >= this.w || y >= this.ph) return null;
-    return this.px[y * this.w + x];
-  }
   padd(x, y, c, k = 1) {
     x = Math.round(x); y = Math.round(y);
     if (x < 0 || y < 0 || x >= this.w || y >= this.ph) return;
     const i = y * this.w + x;
     this.px[i] = addc(this.px[i] || [0, 0, 0], c, k);
-  }
-  pclear(x, y) {
-    x = Math.round(x); y = Math.round(y);
-    if (x < 0 || y < 0 || x >= this.w || y >= this.ph) return;
-    this.px[y * this.w + x] = null;
   }
   // Colour-only light under the pixels (skipped in monochrome).
   glow(x, y, c, k = 1) {
@@ -152,35 +115,6 @@ export class Frame {
       }
     }
   }
-  glowDisk(cx, cy, r, c, k = 1) {
-    for (let y = Math.floor(cy - r); y <= Math.ceil(cy + r); y++) {
-      for (let x = Math.floor(cx - r); x <= Math.ceil(cx + r); x++) {
-        const d = Math.hypot(x - cx, y - cy) / r;
-        if (d < 1) this.glow(x, y, c, k * (1 - d) ** 2);
-      }
-    }
-  }
-  poly(pts, c) {
-    const ys = pts.map((p) => p[1]); const xs = pts.map((p) => p[0]);
-    for (let y = Math.floor(Math.min(...ys)); y <= Math.ceil(Math.max(...ys)); y++) {
-      for (let x = Math.floor(Math.min(...xs)); x <= Math.ceil(Math.max(...xs)); x++) {
-        let inside = false;
-        for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
-          const [xi, yi] = pts[i]; const [xj, yj] = pts[j];
-          if ((yi > y + 0.5) !== (yj > y + 0.5) && x + 0.5 < ((xj - xi) * (y + 0.5 - yi)) / (yj - yi) + xi) inside = !inside;
-        }
-        if (inside) this.pset(x, y, typeof c === 'function' ? c(x, y) : c);
-      }
-    }
-  }
-  pline(x0, y0, x1, y1, c, thick = 0) {
-    const n = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) * 1.5));
-    for (let i = 0; i <= n; i++) {
-      const t = i / n; const x = lerp(x0, x1, t); const y = lerp(y0, y1, t);
-      const col = typeof c === 'function' ? c(t) : c;
-      if (thick > 0) this.disk(x, y, thick, col); else this.pset(x, y, col);
-    }
-  }
 
   // ── braille dots (x: 0..2w-1, y: 0..4h-1) ─────────────────────────────
   dot(x, y, c) {
@@ -190,18 +124,7 @@ export class Frame {
     this.br[i] |= BRAILLE[y & 3][x & 1];
     if (c) this.brc[i] = c;
   }
-  dline(x0, y0, x1, y1, c) {
-    const n = Math.max(1, Math.ceil(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0))));
-    for (let i = 0; i <= n; i++) this.dot(lerp(x0, x1, i / n), lerp(y0, y1, i / n), typeof c === 'function' ? c(i / n) : c);
-  }
 
-  // ── boxes ─────────────────────────────────────────────────────────────
-  box(x, y, w, h, c, style = 'round') {
-    const S = { round: '╭╮╰╯─│', heavy: '┏┓┗┛━┃', double: '╔╗╚╝═║', light: '┌┐└┘─│' }[style];
-    for (let i = 1; i < w - 1; i++) { this.put(x + i, y, S[4], c); this.put(x + i, y + h - 1, S[4], c); }
-    for (let j = 1; j < h - 1; j++) { this.put(x, y + j, S[5], c); this.put(x + w - 1, y + j, S[5], c); }
-    this.put(x, y, S[0], c); this.put(x + w - 1, y, S[1], c); this.put(x, y + h - 1, S[2], c); this.put(x + w - 1, y + h - 1, S[3], c);
-  }
 }
 
 // ── rendering ───────────────────────────────────────────────────────────
@@ -218,7 +141,6 @@ export const to256 = (c) => {
   return gd < cd ? 232 + gi : 16 + 36 * ci[0] + 6 * ci[1] + ci[2];
 };
 
-const SHADES = ' ░▒▓█';
 const cellMono = (top, bot) => {
   const lt = luma(top); const lb = luma(bot);
   const on = 0.3; const off = 0.1;
@@ -276,8 +198,6 @@ export function render(f, mode, cols = f.w) {
   return lines;
 }
 
-export const visibleWidth = (s) => [...s.replace(/\x1b\[[0-9;?]*[A-Za-z]/g, '')].length;
-
 // ── fonts ──────────────────────────────────────────────────────────────
 // The hero logo: lowercase "tblock", 12 pixels tall (6 rows of half blocks), chunky 3px strokes.
 const BIG = {
@@ -287,22 +207,6 @@ const BIG = {
   o: ['..........', '..........', '..........', '..........', '.########.', '##########', '###....###', '###....###', '###....###', '###....###', '##########', '.########.'],
   c: ['..........', '..........', '..........', '..........', '.#########', '##########', '###.......', '###.......', '###.......', '###.......', '##########', '.#########'],
   k: ['###.......', '###.......', '###.......', '###.......', '###...###.', '###..###..', '###.###...', '######....', '######....', '###.###...', '###..###..', '###...###.'],
-};
-
-const SMALL = {
-  A: ['.###.', '#...#', '#####', '#...#', '#...#'], B: ['####.', '#...#', '####.', '#...#', '####.'],
-  C: ['.####', '#....', '#....', '#....', '.####'], D: ['####.', '#...#', '#...#', '#...#', '####.'],
-  E: ['#####', '#....', '####.', '#....', '#####'], F: ['#####', '#....', '####.', '#....', '#....'],
-  G: ['.####', '#....', '#..##', '#...#', '.###.'], H: ['#...#', '#...#', '#####', '#...#', '#...#'],
-  I: ['#####', '..#..', '..#..', '..#..', '#####'], K: ['#...#', '#..#.', '###..', '#..#.', '#...#'],
-  L: ['#....', '#....', '#....', '#....', '#####'], M: ['#...#', '##.##', '#.#.#', '#...#', '#...#'],
-  N: ['#...#', '##..#', '#.#.#', '#..##', '#...#'], O: ['.###.', '#...#', '#...#', '#...#', '.###.'],
-  P: ['####.', '#...#', '####.', '#....', '#....'], R: ['####.', '#...#', '####.', '#..#.', '#...#'],
-  S: ['.####', '#....', '.###.', '....#', '####.'], T: ['#####', '..#..', '..#..', '..#..', '..#..'],
-  U: ['#...#', '#...#', '#...#', '#...#', '.###.'], W: ['#...#', '#...#', '#.#.#', '##.##', '#...#'],
-  X: ['#...#', '.#.#.', '..#..', '.#.#.', '#...#'], Y: ['#...#', '.#.#.', '..#..', '..#..', '..#..'],
-  '×': ['.....', '.#.#.', '..#..', '.#.#.', '.....'], '!': ['..#..', '..#..', '..#..', '.....', '..#..'],
-  '/': ['....#', '...#.', '..#..', '.#...', '#....'], ' ': ['...', '...', '...', '...', '...'],
 };
 
 const bitmap = (glyphs, str, gap) => {
@@ -318,15 +222,7 @@ const bitmap = (glyphs, str, gap) => {
 
 export const LOGO = bitmap(BIG, 'tblock', 2); // 63 × 12 px
 
-// A word in the 5×5 caps font, each font pixel sx × sy screen pixels.
-export function word(str, sx = 1, sy = 1, gap = 1) {
-  const b = bitmap(SMALL, str.toUpperCase(), gap);
-  const pts = [];
-  for (const [x, y] of b.pts) for (let j = 0; j < sy; j++) for (let i = 0; i < sx; i++) pts.push([x * sx + i, y * sy + j]);
-  return { w: b.w * sx, h: b.h * sy, pts };
-}
-
-// Draws a bitmap (LOGO or word()) at pixel position ox, oy.
+// Draws a bitmap such as LOGO at pixel position ox, oy.
 // color(x, y, u, v) → rgb | null, where u, v are 0..1 across the bitmap. shadow draws a 1px extrude.
 export function drawBitmap(f, bmp, ox, oy, color, { shadow = null, depth = 1, shift = null } = {}) {
   if (shadow) {
@@ -342,25 +238,4 @@ export function drawBitmap(f, bmp, ox, oy, color, { shadow = null, depth = 1, sh
     const c = color(x, y, x / Math.max(1, bmp.w - 1), y / Math.max(1, bmp.h - 1));
     if (c) f.pset(ox + x + sx, oy + y, c);
   }
-}
-
-// A styled text helper: gradient across a string.
-export const grad = (stops, phase = 0) => (i, n) => ramp(stops, (((i / Math.max(1, n - 1)) + phase) % 1 + 1) % 1);
-
-// Effort meter as text: ▰▰▰▱▱▱ warming teal → rose.
-export function effortMeter(f, x, y, level, { word: showWord = true, lit = 1 } = {}) {
-  const filled = EFFORTS.indexOf(level);
-  for (let i = 0; i < 6; i++) {
-    const on = i < filled;
-    f.put(x + i, y, on ? '▰' : '▱', on ? scale(ramp(EFFORT_RAMP, i / 5), lit) : FAINT);
-  }
-  if (showWord) f.text(x + 7, y, level, DIM);
-  return x + 7 + (showWord ? level.length : 0);
-}
-
-// Title row helper (matches ui.mjs section style).
-export function section(f, x, y, title, w, c = ACCENT) {
-  f.put(x, y, '▍', c);
-  f.say(x + 1, y, ` ${title.toUpperCase()} `, [240, 236, 240], { bold: true });
-  for (let i = x + title.length + 3; i < x + w; i++) f.put(i, y, '─', FAINT);
 }

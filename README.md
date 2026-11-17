@@ -116,6 +116,7 @@ tblock ships a small node cli with no dependencies. `/setup-tblock` puts it on y
 | `tblock preset` | lists or switches presets |
 | `tblock roles` | shows or sets each role's model and effort |
 | `tblock guard on` | has the harness ask before a push, pr, ticket or publish |
+| `tblock splash` | the hyperspace jump that plays the first time you run tblock in a terminal, again |
 | `tblock grant` | one yes for a punch-it run: the guard stops asking before this branch's pushes, its mr and its ticket |
 | `tblock watch` | a live view of your agent sessions and their subagents |
 | `tblock log` | what every session did since yesterday, for a standup |
