@@ -320,7 +320,7 @@ td:first-child { color:var(--fg); font-weight:500; white-space:nowrap; }
 
 <div class="shell">
   <aside class="side" aria-label="Sections">
-    <div class="brand"><div class="brand-mark" aria-hidden="true">tb</div><span class="brand-name">tblock</span><span class="brand-ver">0.16.0</span></div>
+    <div class="brand"><div class="brand-mark" aria-hidden="true">tb</div><span class="brand-name">tblock</span><span class="brand-ver">0.21.0</span></div>
     <div class="nav-label">Learn</div>
     <nav class="nav" id="nav">
       <a href="#overview" data-key="1"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 7.2v3.6M8 5.2v.1" stroke-linecap="round"/></svg>Why tblock<span class="kbd">1</span></a>
@@ -363,10 +363,10 @@ td:first-child { color:var(--fg); font-weight:500; white-space:nowrap; }
         <div class="stack" style="gap:12px">
           <div class="sec-head"><h2>Four building blocks</h2><span class="meta">Click one to explore it</span></div>
           <div class="grid g4 blocks">
-            <a class="card" href="#playbooks"><div class="b-top"><h4>Playbooks</h4><span class="b-count">15</span></div><p>Step-by-step checklists for one kind of task, like Bug fix or UI work.</p></a>
+            <a class="card" href="#playbooks"><div class="b-top"><h4>Playbooks</h4><span class="b-count">16</span></div><p>Step-by-step checklists for one kind of task, like Bug fix or UI work.</p></a>
             <a class="card" href="#skills"><div class="b-top"><h4>Skills</h4><span class="b-count">50</span></div><p>Techniques it picks up when a step needs one, like a multi-model review.</p></a>
             <a class="card" href="#principles"><div class="b-top"><h4>Principles</h4><span class="b-count">24</span></div><p>Rules of judgment it must name when they change a decision.</p></a>
-            <a class="card" href="#agents"><div class="b-top"><h4>Agents</h4><span class="b-count">2+</span></div><p>Helpers it hands bounded jobs to, on the model each role needs.</p></a>
+            <a class="card" href="#agents"><div class="b-top"><h4>Agents</h4><span class="b-count">3+</span></div><p>Helpers it hands bounded jobs to, on the model each role needs.</p></a>
           </div>
         </div>
 
@@ -401,11 +401,41 @@ td:first-child { color:var(--fg); font-weight:500; white-space:nowrap; }
         <div class="head">
           <div class="eyebrow">How a run flows</div>
           <h1 id="h-flow">From one prompt to a change you can trust</h1>
-          <p class="lead">Step through a real bug fix. Use the arrow keys or <span class="kbd">J</span> <span class="kbd">K</span> to move.</p>
+          <p class="lead">There are two ways to run it. Step by step, you say yes at each outward action. With punch it, you say yes once and it drives from an idea to a merge-ready MR. Use the arrow keys or <span class="kbd">J</span> <span class="kbd">K</span> to move.</p>
         </div>
-        <div class="flow">
-          <div class="steps" id="steps" role="tablist" aria-label="Steps"></div>
-          <div class="card lead-card step-detail" id="step-detail" role="tabpanel"></div>
+        <div class="stack" style="gap:14px">
+          <div class="seg" role="group" aria-label="Run style" id="flow-seg" style="align-self:flex-start">
+            <button type="button" aria-pressed="true" data-flow="steps">Step by step · a bug fix</button>
+            <button type="button" aria-pressed="false" data-flow="punch">Punch it · idea to MR</button>
+          </div>
+          <div class="flow">
+            <div class="steps" id="steps" role="tablist" aria-label="Steps"></div>
+            <div class="card lead-card step-detail" id="step-detail" role="tabpanel"></div>
+          </div>
+        </div>
+
+        <div class="stack" style="gap:12px">
+          <div class="sec-head"><h2>Which one to use</h2><span class="meta">Both run the same playbooks. They differ in how often you're asked.</span></div>
+          <div class="grid g2">
+            <div class="card stack" style="gap:10px">
+              <div class="sec-head"><h3>Punch it</h3><span class="pill green">One yes</span></div>
+              <div class="compare-rows">
+                <div class="c-row"><span class="dot green"></span><div><strong>You can write the criteria up front.</strong> <span>"Add a status filter to GET /orders", not "make search better".</span></div></div>
+                <div class="c-row"><span class="dot green"></span><div><strong>One repo, one branch.</strong> <span>A small or standard change.</span></div></div>
+                <div class="c-row"><span class="dot green"></span><div><strong>Clear of the risky areas.</strong> <span>No auth, personal data, migrations, public contracts or CI config.</span></div></div>
+                <div class="c-row"><span class="dot green"></span><div><strong>It can push before you see the diff.</strong> <span>You still review the MR before it merges.</span></div></div>
+              </div>
+            </div>
+            <div class="card stack" style="gap:10px">
+              <div class="sec-head"><h3>Step by step</h3><span class="pill orange">A yes per action</span></div>
+              <div class="compare-rows">
+                <div class="c-row"><span class="dot amber"></span><div><strong>Risky or cross-repo work.</strong> <span>Say "go deep" for architect, interrogate and blast-radius before it ships.</span></div></div>
+                <div class="c-row"><span class="dot amber"></span><div><strong>The design isn't settled.</strong> <span>Prototype or investigate first, then write the ticket.</span></div></div>
+                <div class="c-row"><span class="dot amber"></span><div><strong>You want the diff before the push.</strong> <span>Then ask it to open an MR, and then to babysit it.</span></div></div>
+                <div class="c-row"><span class="dot amber"></span><div><strong>Review needs your call, or there's no ticket.</strong> <span>A contested thread, a spike, or a quick fix.</span></div></div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -454,14 +484,18 @@ td:first-child { color:var(--fg); font-weight:500; white-space:nowrap; }
           <h1 id="h-agents">Helpers on a short leash</h1>
           <p class="lead">The main agent owns the task, the playbook and the reply to you. It hands bounded jobs to helpers, each with its own memory and the model its role needs, then reviews their work itself.</p>
         </div>
-        <div class="grid g3">
+        <div class="grid g2">
           <div class="card agent">
             <div class="a-top"><div class="a-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5.5 4.5L2 8l3.5 3.5M10.5 4.5L14 8l-3.5 3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><h3>delegate</h3><span class="meta">One bounded job</span></div></div>
             <ul><li>Gets a code change or a fix, with the files, what done means, and the check to run.</li><li>Stays inside those files. Never pushes or posts.</li><li>Returns a fixed report: changed, checked, not checked, decisions.</li></ul>
           </div>
           <div class="card agent">
-            <div class="a-top"><div class="a-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="2" width="10" height="12" rx="2"/><path d="M5.5 5.5h5M5.5 8h5M5.5 10.5h2.5" stroke-linecap="round"/></svg></div><div><h3>threepio</h3><span class="meta">Ticket writer</span></div></div>
-            <ul><li>Drafts GitLab or GitHub tickets from the finished work and its checks.</li><li>Only claims what the diff or the checks back up.</li><li>Drafts only. A person says yes before anything is created.</li></ul>
+            <div class="a-top"><div class="a-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="2" width="10" height="12" rx="2"/><path d="M5.5 5.5h5M5.5 8h5M5.5 10.5h2.5" stroke-linecap="round"/></svg></div><div><h3>threepio</h3><span class="meta">Ticket writer · intake and finish</span></div></div>
+            <ul><li>Intake: drafts the ticket before work starts, with numbered acceptance criteria and the evidence each one needs.</li><li>Finish: drafts tickets from the finished work and its checks, claiming only what they back up.</li><li>Drafts only. A person says yes before anything is created.</li></ul>
+          </div>
+          <div class="card agent">
+            <div class="a-top"><div class="a-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8.5l3 3 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><h3>checker</h3><span class="meta">Branch against ticket</span></div></div>
+            <ul><li>Checks one branch against its ticket's acceptance criteria, with evidence it ran itself.</li><li>Sorts every change no criterion needs into supporting or unrelated.</li><li>Read-only. Its verdict is pass, or gaps with what to fix first.</li></ul>
           </div>
           <div class="card agent">
             <div class="a-top"><div class="a-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="6" r="2"/><circle cx="11" cy="6" r="2"/><circle cx="8" cy="11" r="2"/></svg></div><div><h3>Review panels</h3><span class="meta">interrogate · ui-council</span></div></div>
@@ -508,6 +542,7 @@ td:first-child { color:var(--fg); font-weight:500; white-space:nowrap; }
               <div class="stack" style="gap:8px"><span class="pill green" style="align-self:flex-start">Just does it</span><ul class="auto-list"><li><span class="dot green"></span>Read and edit code</li><li><span class="dot green"></span>Run builds, tests, the app</li><li><span class="dot green"></span>Local commits on a branch</li><li><span class="dot green"></span>Spawn the helpers a step needs</li></ul></div>
               <div class="stack" style="gap:8px"><span class="pill orange" style="align-self:flex-start">Always asks first</span><ul class="auto-list"><li><span class="dot amber"></span>Push or force-push</li><li><span class="dot amber"></span>Open, approve or merge a PR</li><li><span class="dot amber"></span>Post to chat or tickets</li><li><span class="dot amber"></span>Deploy, or delete anything</li></ul></div>
             </div>
+            <span class="meta">Punch it is the one exception. You say yes once, up front, to a named list: create the ticket, push its branch, open the MR and babysit it. It still never merges.</span>
           </div>
         </div>
 
@@ -522,7 +557,8 @@ td:first-child { color:var(--fg); font-weight:500; white-space:nowrap; }
         <div class="grid g2">
           <div class="card stack faq" style="gap:0">
             <details open><summary>Does it use more tokens?</summary><p>Yes, mostly on helpers and review panels. The lean preset keeps that down, and for a one-line edit you can skip tblock-mode. A cheap answer that's wrong costs more once you count the fix.</p></details>
-            <details><summary>Can it push or deploy by itself?</summary><p>No. Pushing, PRs, tickets, deploys and deletes always wait for a clear yes, and a yes covers that one action only.</p></details>
+            <details><summary>Can it push or deploy by itself?</summary><p>No. Pushing, PRs, tickets, deploys and deletes always wait for a clear yes, and a yes covers that one action only. With punch it, you give that yes once, through <code>tblock grant</code>. It covers the ticket, the branch's pushes, the MR and its babysitting for a few hours. It never covers a merge, a force-push, another branch, or a deploy.</p></details>
+            <details><summary>What does punch it need?</summary><p>A forge it can reach: <code>gh</code> for GitHub, or <code>glab</code> or the GitLab MCP server for GitLab. Run <code>/ticket-up</code> once to set up the project's tickets. Then type <code>/tblock-mode punch it</code> with an idea or a ticket number. <code>punch it #&lt;n&gt;</code> in a new session picks the run up where it stopped.</p></details>
             <details><summary>What if my project has no tests?</summary><p>Its proof is only as good as the checks it can run. It says what it could not check instead of claiming a pass, and it can set up a verification skill for the project.</p></details>
             <details><summary>How do I find the right skill?</summary><p>Ask <code>/tblock-help</code>. It maps what you want to do onto the skill or playbook that does it, and fixes runs that went wrong.</p></details>
           </div>
@@ -614,7 +650,7 @@ $$('[data-compare]').forEach((b) => b.addEventListener('click', () => setCompare
 setCompare('tblock');
 
 /* ---------- flow ---------- */
-const FLOW = [
+const FLOWS = { steps: [
   { t: 'You type the task', d: 'Put /tblock-mode in front of the task. Say what\'s wrong and how you\'ll know it\'s right. Don\'t list skills, because the playbook already knows which ones a step needs.',
     code: '<b>/tblock-mode</b> bug: the order total counts refunds twice.\nit should count them once.', by: [] },
   { t: 'It restates your goal', d: 'Before any code, it tells you the goal, the problem behind it, and the smallest change it expects. If the evidence rules out what you asked for, it shows you and stops.',
@@ -633,8 +669,33 @@ const FLOW = [
     code: '<b>Not checked.</b> Split orders with partial refunds.\n<b>Principles.</b> Fix Root Causes moved the fix from\nsummary() to lineItems().', by: ['unslop', 'technical-writing'] },
   { t: 'It asks before anything leaves', d: 'Local commits are fine. Pushing, opening a PR, or creating a ticket waits for your yes. Threepio can draft the ticket, but a person approves it.',
     code: 'Ready to push <b>fix/refund-double-count</b> and open a PR.\nOK to go ahead?', by: ['Opening an MR playbook', 'threepio', 'ticket-up'] }
-];
+], punch: [
+  { t: 'You say punch it', d: 'Put "punch it" after /tblock-mode, with an idea or a ticket number. The run is now its job, from the idea to a merge-ready MR, and it asks you once.',
+    code: '<b>/tblock-mode punch it</b> support needs a customer\'s orders\nas a CSV they can download.', by: ['Punch it playbook'] },
+  { t: 'Threepio drafts the contract', d: 'Threepio, in intake mode, searches for a duplicate ticket, reads the code the work will touch, and drafts the ticket. Each acceptance criterion gets an ID and the kind of evidence that will prove it. Anything the idea leaves open, such as a format or who may call it, comes back to you as a question.',
+    code: '## Acceptance\n- [ ] AC-1 GET /customers/{id}/orders.csv returns every\n      order, newest first  <span class="c">(evidence: test)</span>\n- [ ] AC-2 Only the support role can call it. Others\n      get 403  <span class="c">(evidence: test)</span>\n## Out of scope\n- Finance exports', by: ['threepio', 'ticket-up'] },
+  { t: 'It asks once', d: 'One question names everything the yes covers. With the guard on, the question is the tblock grant prompt, and nothing asks again on this branch for a few hours. The yes never covers a merge, a force-push, another branch, or closing anything.',
+    code: 'OK to <b>create the ticket</b>, <b>push</b> feat/orders-csv,\n<b>open the MR</b> and <b>babysit</b> it: fix pushes, thread\nreplies, and one CI rerun?\n<span class="c">never: merge, force-push, other branches, closing</span>', by: ['tblock grant', 'guard'] },
+  { t: 'It creates the ticket and builds', d: 'It creates the ticket, then builds on its own branch with the Feature playbook, or Bug fix for a defect. Everything from a step-by-step run still applies: the data shape first, small verified units, and proof on the real thing.',
+    code: 'created #482  Export a customer\'s orders as CSV\nbranch feat/orders-csv off main\n☐ Read the subsystem and its callers\n☐ Name the data shape\n☐ Build, verify, and commit each unit', by: ['ticket-up', 'Feature playbook', 'Prove It Works'] },
+  { t: 'Checker checks it against the ticket', d: 'A fresh agent on the judgment role, which didn\'t build the work, maps each criterion to evidence it ran itself and flags every change no criterion needs. Missing criteria get fixed, unrelated changes move to their own branch, and checker runs again on the new head.',
+    code: 'head a1b2c3d\nAC-1  test/export.test.ts:18   <b>met</b>\nAC-2  no test for the 403      <b>missing</b>\nunrelated  src/pricing.ts:40  <span class="c">rename, not needed</span>\n<b>verdict:</b> gaps. fix AC-2, move the rename', by: ['checker', 'judgment role'] },
+  { t: 'It opens the MR', d: 'It pushes the branch and opens the MR with checker\'s Acceptance table in the description, so a reviewer sees each criterion and its proof for that exact commit.',
+    code: '## Acceptance\n| AC   | Evidence               | Status | Head    |\n| AC-1 | test/export.test.ts:18 | met    | d4e5f6a |\n| AC-2 | test/export.test.ts:44 | met    | d4e5f6a |\n\nCloses #482', by: ['Opening an MR playbook', 'technical-writing'] },
+  { t: 'It babysits to merge-ready', d: 'In drive mode it clears conflicts, then review threads, then CI, under the yes you already gave. Checker runs on each fix before it is pushed. It stops and asks only when a criterion can\'t be met, checker\'s second round still has gaps, a fix needs something outside the grant, or a thread needs your decision.',
+    code: 'thread  "handle an empty order list"  → fixed, replied\nCI      test:int failed once  → classified, one rerun\nchecker on 9f8e7d6  <b>pass</b>', by: ['Babysit playbook', 'checker'] },
+  { t: 'It hands off, unmerged', d: 'It runs tblock grant off and reports one of three results: ready to merge, waiting only on a human approval, or blocked. Merging stays your call, under your forge\'s own rules.',
+    code: '<b>Ready to merge.</b> !412, pipeline green, 1 approval\nAcceptance: 2 of 2 met on 9f8e7d6\nDecisions: newest first by created_at\ngrant off. The MR is open and unmerged.', by: ['tblock grant off'] }
+] };
+let flowKey = store.get('tb101-flow') === 'punch' ? 'punch' : 'steps';
+let FLOW = FLOWS[flowKey];
 let flowI = 0;
+function setFlow(key) {
+  flowKey = key; FLOW = FLOWS[key]; flowI = 0; store.set('tb101-flow', key);
+  $$('[data-flow]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.flow === key)));
+  renderSteps();
+}
+$('#flow-seg').addEventListener('click', (e) => { const b = e.target.closest('[data-flow]'); if (b) setFlow(b.dataset.flow); });
 function renderSteps() {
   $('#steps').innerHTML = FLOW.map((s, i) => `<button type="button" class="step-btn${i < flowI ? ' done' : ''}" role="tab" ${i === flowI ? 'aria-current="step" aria-selected="true"' : 'aria-selected="false"'} data-step="${i}"><span class="n">${i + 1}</span><span>${esc(s.t)}</span></button>`).join('');
   const s = FLOW[flowI];
@@ -653,7 +714,7 @@ function renderSteps() {
 function goStep(i) { flowI = (i + FLOW.length) % FLOW.length; renderSteps(); }
 $('#steps').addEventListener('click', (e) => { const b = e.target.closest('[data-step]'); if (b) goStep(+b.dataset.step); });
 $('#step-detail').addEventListener('click', (e) => { const b = e.target.closest('[data-go]'); if (b && !b.disabled) goStep(flowI === FLOW.length - 1 && b.dataset.go === '1' ? 0 : flowI + +b.dataset.go); });
-renderSteps();
+setFlow(flowKey);
 
 /* ---------- playbooks ---------- */
 const PB = [
@@ -666,8 +727,9 @@ const PB = [
   { id: 'hillclimb', t: 'Hillclimb', when: 'Improve one metric over many keep-or-revert tries', own: 'You own the metric and the experiment\'s integrity.', steps: ['Ground the workload, then fix one metric, a target, and a minimum number of attempts.', 'Build the measurement harness, prove it can tell cases apart, then freeze it.', 'Open a decision log with one row per attempt.', 'Ground each hypothesis in a specific mechanism.', 'Loop: one change, measure, keep it only if the number moves past noise and tests stay green, otherwise revert.', 'Push past the first plateau with a different kind of idea.', 'Stop when the target is met. Never move the target to meet it.', 'Deliver the accepted commits in the order they landed.'], reply: 'The metric and target, baseline to final with the percent change, kept and reverted counts, and the next idea to try.' },
   { id: 'prototype', t: 'Prototype', when: 'Settle an uncertain design with a sketch', own: 'The output is a design decision backed by a throwaway artifact.', steps: ['Name the decision: layout, interaction, density, behavior, timing, or approach.', 'Gather references when the design space is open.', 'Build the smallest useful experiment in a scratch directory.', 'Put alternatives behind one labelled switcher.', 'Observe each one on the real surface.', 'Present the alternatives, evidence, tradeoffs, and a recommendation.'], reply: 'The decision, the variants, what was observed, the recommendation, and where the sketch lives.' },
   { id: 'visual-parity', t: 'Visual parity', when: 'Prove a restyle or migration looks the same', own: 'The baseline is the spec, and you do not touch it.', steps: ['Build the baseline first: a script that screenshots the component in every state.', 'Don\'t change the harness, edit the baseline, or restructure to make a diff pass.', 'Migrate one component at a time, shared primitives first.', 'Diff each against its baseline. A nonzero diff is a fail.', 'Follow the requested delivery scope.'], reply: 'Each component with its diff result, where the baseline script lives, and what is left.' },
-  { id: 'opening-an-mr', t: 'Opening an MR', when: 'Prepare and open a merge or pull request', own: 'You own what the reviewer sees. Tidy, describe, prove, and ask before it leaves.', steps: ['Read the project\'s conventions and MR template.', 'Resolve the forge once: glab for GitLab, gh for GitHub.', 'Tidy the branch.', 'Check the diff before a reviewer does.', 'Write the title and description to the technical-writing standard.', 'Ask before it leaves the machine.', 'Create any approved tickets first and close them from the description.', 'Keep MRs narrow.'], reply: 'The MR link, read back from the forge, with what it contains, how it was verified, and what is left for reviewers.' },
+  { id: 'opening-an-mr', t: 'Opening an MR', when: 'Prepare and open a merge or pull request', own: 'You own what the reviewer sees. Tidy, describe, prove, and ask before it leaves.', steps: ['Read the project\'s conventions and MR template.', 'Resolve the forge once: glab for GitLab, gh for GitHub.', 'Tidy the branch.', 'Check the diff before a reviewer does, with checker when the ticket has AC-n criteria.', 'Write the title and description to the technical-writing standard.', 'Ask before it leaves the machine.', 'Create any approved tickets first and close them from the description.', 'Keep MRs narrow.'], reply: 'The MR link, read back from the forge, with what it contains, how it was verified, and what is left for reviewers.' },
   { id: 'babysit', t: 'Babysit', when: 'Drive a PR or MR to merge-ready', own: 'You own the merge frontier.', steps: ['Declare the mode before any polling.', 'Ask once for the outward actions the mode needs.', 'Work the lowest unmerged PR in a stack and nothing above it.', 'Never change the stack\'s shape.', 'Order is conflicts, then review threads, then CI.', 'Trust the forge\'s merge verdict, not a green check list.', 'Classify a CI failure before any rerun.', 'Triage review comments sceptically, human and bot alike.'], reply: 'Each PR\'s verdict, what was fixed, threads answered or dismissed with the reason, and CI reruns with their classification.' },
+  { id: 'punch-it', t: 'Punch it', when: 'Take an idea or a ticket to a merge-ready MR, asking once', own: 'You own the run from an idea to a merge-ready MR. Ask once, then stop only for a real blocker. Never merge.', steps: ['Draft the contract: an intake ticket from Threepio, or AC-n lines for an existing ticket, and a branch off the default branch.', 'Ask once, naming everything the yes covers: the ticket, the push, the MR, and babysitting it.', 'Create the ticket.', 'Build with the Feature playbook, or Bug fix for a defect.', 'Check with the checker agent. Fix each missing criterion, move each unrelated change to its own branch, and check again.', 'Open the MR with checker\'s Acceptance table in the description.', 'Babysit in drive mode, running checker on each fix before it is pushed.', 'Hand off at merge-ready and end the grant.'], reply: 'The MR link and the forge\'s verdict, the Acceptance table, what babysit fixed, each decision made, and that the MR is open and unmerged.' },
   { id: 'runtime-forensics', t: 'Runtime forensics', when: 'Diagnose a live leak, spin, hang, or glitch', own: 'You own the diagnosis. Instrument the live process, don\'t theorize.', steps: ['Reproduce the symptom on the surface where it occurs.', 'Capture the live signal while it happens: a CPU profile, heap snapshot, or trace.', 'Read the app\'s logs over the same window.', 'Reduce the artifact to the smoking gun.', 'Prove the mechanism before believing it.', 'Map the finding back to the file and line.'], reply: 'The symptom, the signal captured, the reduced finding, how the mechanism was proved, and the source location.' },
   { id: 'trace-forensics', t: 'Trace forensics', when: 'Diagnose a captured profile or heap snapshot', own: 'You own the diagnosis from the artifact.', steps: ['Identify the format and load it with the right tool.', 'Turn the raw artifact into something you can query.', 'Narrow to the cause.', 'Line up the app\'s logs with the capture\'s window.', 'Attribute it to source.', 'Diff a paired before and after capture to confirm.'], reply: 'The artifact and format, the finding, the source location, and whether a paired capture confirmed it.' },
   { id: 'eval', t: 'Eval', when: 'Measure whether a skill or prompt change helps', own: 'Define success before running, isolate each attempt, and judge blind.', steps: ['Write 3 to 6 concrete criteria before running.', 'Prepare separate workspaces from the same baseline.', 'Use one realistic prompt, unchanged, for each variant.', 'Collect the real artifacts and run the same checks on each.', 'Have an independent judge score all outputs under neutral labels.', 'Check the run records to confirm the instructions loaded.', 'Report results, confounders, and a keep, revise or reject call.'], reply: 'Results tied to real artifacts, with the strength and limits of the evidence.' },
@@ -731,7 +793,7 @@ const SK = [
   ['Code rules', 'vercel-react-best-practices', 'Vercel\'s rules for fast React components, hooks and data fetching.'],
   ['Write', 'technical-writing', 'Docs, READMEs, RFCs, MR descriptions and commit messages to a standard.'],
   ['Write', 'unslop', 'Strips AI tells out of any prose, replies included.'],
-  ['Write', 'ticket-up', 'Drafts and files GitLab or GitHub tickets for finished work.'],
+  ['Write', 'ticket-up', 'Drafts and files GitLab or GitHub tickets: a contract with acceptance criteria before work starts, or a record of finished work.'],
   ['Long work', 'show-me-your-work', 'Keeps a decision log on long or unattended runs.'],
   ['Improve tblock', 'reflect', 'Turns what a session taught into proposed skill edits, with your approval.'],
   ['Improve tblock', 'correct', 'Makes a mistake agents keep repeating impossible, with a check or a lint.'],
@@ -807,7 +869,7 @@ renderPR();
 const ROLES = [
   ['code', 'Delegated code changes'],
   ['hardest', 'Cross-cutting design, concurrency, subtle algorithms'],
-  ['judgment', 'Explanations, and judging other agents\' work'],
+  ['judgment', 'Explanations, checker, and judging other agents\' work'],
   ['reviewers', 'interrogate and ui-council panels'],
   ['swarm workers', 'swarm workers'],
   ['shootout runners', 'shootout attempts'],
@@ -860,6 +922,7 @@ const PT = {
   ui: { label: 'UI change', a: ['The UI change', 'restructure the access page so roles group by team'], b: ['Design doc', 'DESIGN.md'], make: (a, b) => `/tblock-mode ${a}. follow ${b}. prove every state in the browser.`, routes: 'Routes to the UI-UX playbook, with better-layout and the UI council.' },
   refactor: { label: 'Refactor', a: ['What to restructure', 'the pricing helpers into one module'], b: ['Output to hold steady', 'every order total'], make: (a, b) => `/tblock-mode move ${a}, zero behavior change. record ${b} first and prove it's unchanged after.`, routes: 'Routes to the Refactoring playbook.' },
   perf: { label: 'Perf', a: ['What is slow', 'opening the rules page'], b: ['How slow, on what data', '3s on the full rule set'], make: (a, b) => `/tblock-mode ${a} takes ${b}. trace it, fix the measured cause, show me before and after.`, routes: 'Routes to the Perf issue playbook.' },
+  punch: { label: 'Punch it', a: ['The idea', 'export a customer\'s orders as CSV'], b: ['How you\'ll know it\'s done', 'support can download it for any customer'], make: (a, b) => `/tblock-mode punch it: ${a}. done when ${b}.`, routes: 'Routes to the Punch it playbook: one ticket, one yes, and a merge-ready MR it never merges.' },
   question: { label: 'Question', a: ['What you want explained', 'the nightly refresh'], b: ['What you need to decide', 'whether it can run hourly'], make: (a, b) => `/tblock-mode how does ${a} work? I need to decide ${b}.`, routes: 'Routes to the Investigation playbook and the how skill. Read-only.' }
 };
 let pt = 'bug';
