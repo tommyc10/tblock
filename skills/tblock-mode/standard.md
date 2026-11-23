@@ -44,6 +44,7 @@ At standard and deep size, each trigger below fires when its condition is met. T
 - Docs, RFCs, READMEs, PR or MR descriptions, and commit messages → the [technical-writing](../technical-writing/SKILL.md) skill.
 - Asked to open an MR or PR, or to push a finished change for review → the [Opening an MR](playbooks/opening-an-mr.md) playbook.
 - Asked to write up work as a ticket before building it → the Intake section of [ticket-up](../ticket-up/SKILL.md), drafted by threepio in intake mode.
+- Asked to turn meeting notes into tickets → the Notes section of [ticket-up](../ticket-up/SKILL.md), drafted by threepio in notes mode.
 - Finishing a task that changed code in a project with `.tblock/tickets.json` → the [ticket-up](../ticket-up/SKILL.md) skill, inside the Opening an MR playbook when one is being opened.
 - Any PR or MR status request ("babysit this", "get it green", "address the review comments", "check on X", "anything outstanding on X") → the [Babysit](playbooks/babysit.md) playbook. Never triggered by merely opening one. Declare its mode before polling.
 - Asked to review someone else's MR or PR → the [Reviewing a teammate's MR](playbooks/review-an-mr.md) playbook, not Babysit, which drives an MR you own.

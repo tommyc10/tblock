@@ -11,6 +11,7 @@ import { addGrant, gitWhere, revokeGrant } from './grant.mjs';
 import { handoff } from './handoff.mjs';
 import { addToPath, binDir, launcherTarget, onPath, refreshLauncher, removeFromPath, shellProfile } from './launcher.mjs';
 import { log } from './log.mjs';
+import { clearNotes, describeNotes, readNotes, setNotes } from './notes.mjs';
 import { HARNESSES, HARNESS_NAME, emptyFile, formatEntry, formatRoles, parseEntry, readRoles, rolesPath, runsInClaudeCode, section } from './roles.mjs';
 import { createUI } from './ui.mjs';
 import { firstRun, markSeen, play as playSplash } from './splash.mjs';
@@ -601,6 +602,11 @@ function doctor() {
   }
   add('SKIP', 'GitLab MCP', 'only visible inside an agent session; ask the agent which MCP servers it has');
 
+  const notes = describeNotes(readNotes(homedir()));
+  if (!notes.folder) add('SKIP', 'Notes', 'no meeting notes folder, so tickets start from an idea (run: tblock notes <folder>)');
+  else if (!notes.exists) add('WARN', 'Notes', `${notes.folder} is gone (run: tblock notes <folder>)`);
+  else add('PASS', 'Notes', `${notes.notes} ${notes.notes === 1 ? 'note' : 'notes'} in ${notes.folder}${notes.git ? '' : ', not a git clone'}`);
+
   const repo = run('git', ['rev-parse', '--show-toplevel']);
   if (repo.ok) {
     const items = [['probe.json', 'logs'], ['tickets.json', 'ticket labels'], ['grafana.json', 'Grafana']];
@@ -862,6 +868,25 @@ function grantCommand(to, flags) {
   say(ui.hint('tblock grant off'), ui.dim('    ends it early'));
 }
 
+// `tblock notes <path>` records where the meeting notes live, so ticket-up can draft tickets from them.
+function notesCommand(to) {
+  const home = homedir();
+  if (to === 'off') {
+    const had = clearNotes(home);
+    if (json) return console.log(JSON.stringify({ cleared: had }));
+    return say(ui.status('SKIP', 'Notes', had ? 'forgot the notes folder' : 'no notes folder was set', 8), '');
+  }
+  const folder = to ? setNotes(home, to) : readNotes(home);
+  const d = describeNotes(folder);
+  if (json) return console.log(JSON.stringify(d));
+  if (!folder) return say(ui.status('SKIP', 'Notes', 'no notes folder yet', 8), '', ui.hint('tblock notes <folder>'), ui.dim('    a clone of your team\'s notes repo'));
+  if (!d.exists) return say(ui.status('FAIL', 'Notes', `${folder} is gone`, 8), '', ui.hint('tblock notes <folder>'), ui.dim('    points at the new place'));
+  say(ui.status('PASS', 'Notes', `${d.notes} ${d.notes === 1 ? 'note' : 'notes'} in ${folder}`, 8));
+  if (d.newest) say(ui.dim(`  Newest: ${d.newest}`));
+  say(ui.dim(d.git ? '  A git clone, so each run pulls it first.' : '  Not a git clone, so nothing pulls it; keep it current yourself.'), '');
+  say(ui.hint('/tblock-mode punch it from the latest notes'));
+}
+
 // `tblock command on` writes the launcher and puts its folder on PATH, once; off undoes both.
 function shellCommand(to) {
   if (to && to !== 'on' && to !== 'off') throw new Error(`command takes on or off, not "${to}"`);
@@ -888,6 +913,7 @@ const COMMANDS = [
     ['doctor', 'check the install, roles, Copilot agents, and git tools'],
     ['guard on', 'have the harness ask before a push, PR, MR, ticket, or publish (guard off undoes it)'],
     ['splash', 'play the hyperspace jump again (it plays once, the first time you run tblock in a terminal)'],
+    ['notes <folder>', "record where the team's meeting notes live, for ticket-up (notes shows it, notes off forgets it)"],
     ['grant', "let a punch-it run push this branch and open its MR without asking again, for 4 hours (--hours, grant off)"],
     ['command on', 'add a `tblock` command to your terminal that follows updates (command off undoes it)'],
   ]],
@@ -1032,6 +1058,9 @@ try {
   } else if (command === 'grant') {
     if (!json) process.stdout.write(ui.header('grant'));
     grantCommand(sub?.startsWith('--') ? undefined : sub, args.slice(1));
+  } else if (command === 'notes') {
+    if (!json) process.stdout.write(ui.header('notes'));
+    notesCommand(sub?.startsWith('--') ? undefined : sub);
   } else if (command === 'command') {
     shellCommand(sub);
   } else if (command === 'log') {
@@ -1059,7 +1088,7 @@ try {
   } else if (command === 'handoff') {
     process.stdout.write(handoff({ json, flags: args.slice(1), cwd: process.cwd(), ...homes }));
   } else {
-    const guess = nearest(command, ['help', 'doctor', 'watch', 'roles', 'models', 'tiers', 'preset', 'guard', 'grant', 'splash', 'command', 'log', 'handoff', 'usage', 'statusline']);
+    const guess = nearest(command, ['help', 'doctor', 'watch', 'roles', 'models', 'tiers', 'preset', 'guard', 'grant', 'notes', 'splash', 'command', 'log', 'handoff', 'usage', 'statusline']);
     throw new Error(`unknown command "${args.join(' ')}".${guess ? ` Did you mean tblock ${guess}?` : ''} Run tblock help to see the commands.`);
   }
 } catch (error) {
