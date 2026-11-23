@@ -15,7 +15,7 @@ before that, run `node <install folder>/bin/tblock.mjs`. to find the install fol
 
 ### `tblock doctor`
 
-checks the install in each harness, the roles file per harness, the copilot role agents with their models and efforts, the `tblock` command, and the git clis. it reads each installed copy from disk, so it warns when an install kept its version number but its files differ. exits 1 on any fail.
+checks the install in each harness, the roles file per harness, the copilot role agents with their models and efforts, the `tblock` command, the meeting notes folder, and the git clis. it reads each installed copy from disk, so it warns when an install kept its version number but its files differ. exits 1 on any fail.
 
 ### `tblock preset [name]`
 
@@ -59,6 +59,10 @@ plays the hyperspace jump: stars stretch into streaks, a tunnel, a flash, and th
 ### `tblock grant`
 
 a punch-it run's one yes. with the guard on, running it is itself an ask, and approving it lets the current branch be pushed, its mr or pr opened and commented on, and its ticket created, without asking again. it lasts 4 hours (`--hours=1` to `24`), lives in `~/.tblock/grants.json`, and refuses a default branch. it never covers a merge, a force-push, another branch, or a command that changes folder or names another repo. `tblock grant off` ends it early.
+
+### `tblock notes <folder>`
+
+records where your team's meeting notes live, in `~/.tblock/notes.json`, so ticket-up can draft tickets from a meeting. the folder is any set of markdown files, usually a clone of a private notes repo, with one file per meeting named by its date, such as `2026-11-20-planning.md`. a `README.md` is not a note. each run pulls the folder first when it is a git clone. `tblock notes` shows the folder, how many notes it holds and the newest, and `tblock notes off` forgets it. keep notes out of the repos you work in: they name people and hold decisions that aren't public.
 
 ## sessions
 

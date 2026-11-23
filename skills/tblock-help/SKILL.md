@@ -64,7 +64,7 @@ The default answer is tblock-mode, which runs most of the others when its steps 
 | Understand a change or subsystem, explained plainly | [teach](../teach/SKILL.md) |
 | Read the app's logs, or set up log reading for a project | [probe](../probe/SKILL.md) |
 | Build a Grafana dashboard from the metrics a project's code emits | [grafana-dashboard](../grafana-dashboard/SKILL.md) |
-| Create GitLab or GitHub tickets for planned work, or for finished work and its follow-ups | [ticket-up](../ticket-up/SKILL.md), drafted by the threepio agent |
+| Create GitLab or GitHub tickets from meeting notes, for planned work, or for finished work and its follow-ups | [ticket-up](../ticket-up/SKILL.md), drafted by the threepio agent |
 | Know what a change could break outside its diff | [blast-radius](../blast-radius/SKILL.md) |
 | Settle types and module shape before code that crosses a function boundary | [architect](../architect/SKILL.md) |
 | Get several attempts at one brief, merged into the best | [shootout](../shootout/SKILL.md) |
@@ -133,7 +133,7 @@ Playbooks are step lists inside tblock-mode, not skills, so they have no slash c
 - "how does X work", "why is Y like this", "are we sure" run Investigation.
 - A symptom with a repro runs Bug fix. "without changing behavior" runs Refactoring. A number that's too slow runs Perf issue; "keep improving <metric>" runs Hillclimb.
 - "open an MR" or "open a PR" runs Opening an MR. It asks before pushing and before opening.
-- "punch it" with an idea or a ticket runs Punch it. It drafts the ticket, asks once, then builds, checks the branch against the ticket, opens the MR, and babysits it to merge-ready. It never merges.
+- "punch it" with an idea or a ticket runs Punch it. It drafts the ticket, asks once, then builds, checks the branch against the ticket, opens the MR, and babysits it to merge-ready. It never merges. "punch it from the 20 Nov notes" first drafts tickets from the meeting and asks which to create and which to punch. "punch it #42 done" after the merge drafts the closing comment and follow-ups.
 - "babysit this", "get it green", "address the review comments", or "check on PR X" runs Babysit. It asks once before pushing fixes or replying to threads, and stops at merge-ready; merging stays yours.
 - "review !482", "review this PR", or a teammate's MR link runs Reviewing a teammate's MR. It runs the change in its own worktree, drafts comments locally, and posts nothing until you say yes.
 - "why is this leaking", "it spins the CPU", or "it hangs" on a running app runs Runtime forensics. A profile, trace, or heap snapshot you hand over runs Trace forensics. Both diagnose, they don't fix.

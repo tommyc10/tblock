@@ -118,6 +118,7 @@ tblock ships a small node cli with no dependencies. `/setup-tblock` puts it on y
 | `tblock guard on` | has the harness ask before a push, pr, ticket or publish |
 | `tblock splash` | the hyperspace jump that plays the first time you run tblock in a terminal, again |
 | `tblock grant` | one yes for a punch-it run: the guard stops asking before this branch's pushes, its mr and its ticket |
+| `tblock notes` | where your team's meeting notes live, so ticket-up can draft tickets from them |
 | `tblock watch` | a live view of your agent sessions and their subagents |
 | `tblock log` | what every session did since yesterday, for a standup |
 | `tblock usage` | tokens and cost per day, project, model or session, with cache hit and subagent share |
@@ -145,7 +146,7 @@ routed by [tblock-mode](skills/tblock-mode/SKILL.md).
 | [prototype](skills/tblock-mode/playbooks/prototype.md) | settle a design question with a throwaway sketch |
 | [opening an mr](skills/tblock-mode/playbooks/opening-an-mr.md) | tidy the branch, write the description, ask before it leaves |
 | [babysit](skills/tblock-mode/playbooks/babysit.md) | drive a pr to merge-ready: conflicts, threads, ci |
-| [punch it](skills/tblock-mode/playbooks/punch-it.md) | "punch it": idea to ticket to a merge-ready mr, asking once, never merging |
+| [punch it](skills/tblock-mode/playbooks/punch-it.md) | "punch it": an idea, a ticket or meeting notes to a merge-ready mr, asking up front, never merging |
 | [reviewing an mr](skills/tblock-mode/playbooks/review-an-mr.md) | run someone else's change and draft comments you approve |
 | [runtime forensics](skills/tblock-mode/playbooks/runtime-forensics.md) · [trace forensics](skills/tblock-mode/playbooks/trace-forensics.md) | diagnose a live symptom, or a captured trace |
 | [authoring a skill](skills/tblock-mode/playbooks/authoring-a-skill.md) · [eval](skills/tblock-mode/playbooks/eval.md) | write skills, and test whether a change helps |
@@ -176,7 +177,7 @@ routed by [tblock-mode](skills/tblock-mode/SKILL.md).
 ### agents
 
 - **delegate** does one bounded job inside a playbook, such as a code change. it carries a short [brief](skills/tblock-mode/delegate.md), stays inside its files, never pushes, and ends with a fixed report.
-- **threepio** is a grumbling protocol droid that drafts tickets with [ticket-up](skills/ticket-up/SKILL.md) and never posts them: one for planned work, or the task ticket and follow-ups for finished work.
+- **threepio** is a grumbling protocol droid that drafts tickets with [ticket-up](skills/ticket-up/SKILL.md) and never posts them: tickets from meeting notes, one for planned work, or the task ticket and follow-ups for finished work.
 - **checker** checks a branch against its ticket, read-only: each acceptance criterion met or missing with its evidence, and each change the ticket didn't ask for.
 
 ## develop

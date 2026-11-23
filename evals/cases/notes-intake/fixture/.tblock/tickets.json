@@ -1,0 +1,5 @@
+{
+  "labels": ["team-orders"],
+  "followUpLabel": "follow-up",
+  "weightScale": "1: under a day. 2: a few days. 3: about a week. 5: more than a week."
+}

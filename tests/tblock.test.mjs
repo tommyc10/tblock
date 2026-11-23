@@ -769,3 +769,35 @@ test('handoff briefs a session from its transcript: the task, where it stopped, 
   assert.equal(none.code, 2);
   assert.match(none.err, /no session id starts with "zzzz"/);
 });
+
+test('notes records the meeting notes folder, finds the newest dated note, and forgets it', () => {
+  const { home, cli } = sandbox();
+  const folder = join(home, 'team-notes');
+  mkdirSync(join(folder, '2026'), { recursive: true });
+  mkdirSync(join(folder, '.git'));
+  writeFileSync(join(folder, 'README.md'), '# team notes\n');
+  writeFileSync(join(folder, '2026-11-13-retro.md'), '# retro\n');
+  writeFileSync(join(folder, '2026', '2026-11-20-planning.md'), '# planning\n');
+
+  assert.equal(JSON.parse(cli('notes', '--json').out).folder, null, 'nothing set yet');
+  assert.equal(cli('notes', folder).code, 0);
+  assert.deepEqual(JSON.parse(readFileSync(join(home, '.tblock', 'notes.json'), 'utf8')), { folder });
+  assert.deepEqual(JSON.parse(cli('notes', '--json').out), { folder, exists: true, git: true, notes: 2, newest: '2026/2026-11-20-planning.md' }, 'a README is not a note');
+  assert.match(find(doctorJson(cli), 'Notes')[0].detail, /2 notes in/);
+
+  assert.equal(JSON.parse(cli('notes', 'off', '--json').out).cleared, true);
+  assert.equal(existsSync(join(home, '.tblock', 'notes.json')), false);
+  assert.equal(find(doctorJson(cli), 'Notes')[0].level, 'SKIP');
+});
+
+test('notes refuses a folder that does not exist, and doctor warns when a set folder is gone', () => {
+  const { home, cli } = sandbox();
+  const r = cli('notes', join(home, 'missing'));
+  assert.equal(r.code, 2);
+  assert.match(r.err, /is not a folder/);
+  assert.equal(existsSync(join(home, '.tblock', 'notes.json')), false, 'nothing written');
+
+  mkdirSync(join(home, '.tblock'), { recursive: true });
+  writeFileSync(join(home, '.tblock', 'notes.json'), JSON.stringify({ folder: join(home, 'moved') }));
+  assert.equal(find(doctorJson(cli), 'Notes')[0].level, 'WARN');
+});

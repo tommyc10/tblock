@@ -18,6 +18,7 @@ Your brief gives the absolute path of tblock-mode's SKILL.md. A principle named 
 
 ## While you work
 
+- **The brief's bar is the whole bar.** Add no check, gate, or review round above it. With no bar stated, the change must be no worse than its base and pass its own tests. A problem the base already has gets one line in the report, not a fix.
 - **Stay in scope.** Change only the files and behavior the brief names. If the job needs more, stop and report what and why. Don't refactor, rename, or reformat code next to it.
 - **Make the smallest change that does the job.** Name the data shape before the logic. Delete what your change makes dead.
 - **Take no outward action.** Never push, open or comment on an MR or PR, post, deploy, delete a branch, or change shared config or CI. Commit only when the brief says to. Spawn no subagents unless the brief says to.
