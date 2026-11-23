@@ -286,6 +286,31 @@ td:first-child { color:var(--fg); font-weight:500; white-space:nowrap; }
 .toast { position:fixed; right:calc(20px + env(safe-area-inset-right, 0px)); bottom:calc(20px + env(safe-area-inset-bottom, 0px)); width:340px; max-width:calc(100vw - 32px); border-radius:12px; padding:12px 14px; background:var(--glass-toast); -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px); box-shadow:inset 0 1px 0 var(--glass-edge), 0 0 0 1px var(--line-2), var(--shadow-pop); display:flex; align-items:center; gap:10px; font-size:13px; z-index:60; transition:opacity 200ms var(--ease-out), transform 200ms var(--ease-out); }
 .toast[data-hidden="true"] { opacity:0; transform:translateY(8px); pointer-events:none; }
 
+
+/* ---------- punch it ---------- */
+.step-btn.ask .n { color:var(--amber); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--amber) 40%, transparent); }
+.split { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); gap:12px; align-items:start; }
+.notes { background:var(--l1); border-radius:10px; box-shadow:inset 0 0 0 1px var(--line); padding:8px 0; font:400 12px/1.7 var(--mono); color:var(--fg-2); max-height:560px; overflow:auto; position:sticky; top:20px; }
+.nl { display:grid; grid-template-columns:30px minmax(0,1fr); gap:8px; padding:0 12px 0 0; white-space:pre-wrap; word-break:break-word; transition:background-color 160ms var(--ease-out); }
+.nl .ln { color:var(--fg-3); text-align:right; user-select:none; }
+.nl.skip { opacity:.45; }
+.nl.hl { background:color-mix(in srgb, var(--amber) 16%, transparent); color:var(--fg); opacity:1; }
+.draft { background:var(--l2); border-radius:10px; padding:12px 14px; box-shadow:inset 0 0 0 1px var(--line); display:flex; flex-direction:column; gap:6px; }
+.draft .meta { font-family:var(--mono); }
+.acs { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; }
+.acs li { display:grid; grid-template-columns:14px minmax(0,1fr); gap:8px; font-size:13px; color:var(--fg-2); line-height:1.55; }
+.acs .box { width:12px; height:12px; border-radius:3px; box-shadow:inset 0 0 0 1.5px var(--fg-3); margin-top:4px; }
+.acs .box.off { border-radius:999px; }
+.acs b { color:var(--fg); font-weight:500; }
+.acs code, .draft p code { font-size:12px; }
+.cite { border:0; cursor:pointer; height:18px; padding:0 6px; border-radius:5px; font:500 11px/18px var(--mono); color:var(--amber); background:color-mix(in srgb, var(--amber) 10%, transparent); vertical-align:1px; }
+.cite[aria-pressed="true"] { background:color-mix(in srgb, var(--amber) 24%, transparent); }
+.opt { display:flex; align-items:flex-start; gap:10px; padding:10px 12px; border-radius:9px; background:var(--l2); box-shadow:inset 0 0 0 1px var(--line); cursor:pointer; font-size:13px; color:var(--fg-2); }
+.opt b { color:var(--fg); font-weight:500; }
+.opt input { margin:3px 0 0; accent-color:var(--fg); flex:none; }
+.opt:has(input:checked) { box-shadow:inset 0 0 0 1px var(--line-3); background:var(--l4); }
+@media (max-width: 900px) { .split { grid-template-columns:minmax(0,1fr); } .notes { position:static; max-height:320px; } }
+
 /* ---------- responsive ---------- */
 @media (max-width: 900px) {
   .g4 { grid-template-columns:repeat(2,minmax(0,1fr)); }
@@ -320,16 +345,17 @@ td:first-child { color:var(--fg); font-weight:500; white-space:nowrap; }
 
 <div class="shell">
   <aside class="side" aria-label="Sections">
-    <div class="brand"><div class="brand-mark" aria-hidden="true">tb</div><span class="brand-name">tblock</span><span class="brand-ver">0.16.0</span></div>
+    <div class="brand"><div class="brand-mark" aria-hidden="true">tb</div><span class="brand-name">tblock</span><span class="brand-ver">0.22.0</span></div>
     <div class="nav-label">Learn</div>
     <nav class="nav" id="nav">
       <a href="#overview" data-key="1"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 7.2v3.6M8 5.2v.1" stroke-linecap="round"/></svg>Why tblock<span class="kbd">1</span></a>
       <a href="#flow" data-key="2"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.5 4h7M2.5 8h11M2.5 12h5" stroke-linecap="round"/></svg>How a run flows<span class="kbd">2</span></a>
-      <a href="#playbooks" data-key="3"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="2" width="10" height="12" rx="2"/><path d="M5.5 5.5h5M5.5 8h5M5.5 10.5h3" stroke-linecap="round"/></svg>Playbooks<span class="kbd">3</span></a>
-      <a href="#skills" data-key="4"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1.5"/><rect x="9" y="2" width="5" height="5" rx="1.5"/><rect x="2" y="9" width="5" height="5" rx="1.5"/><rect x="9" y="9" width="5" height="5" rx="1.5"/></svg>Skills<span class="kbd">4</span></a>
-      <a href="#principles" data-key="5"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2l1.7 3.6 3.8.5-2.8 2.7.7 3.8L8 10.8l-3.4 1.8.7-3.8-2.8-2.7 3.8-.5z" stroke-linejoin="round"/></svg>Principles<span class="kbd">5</span></a>
-      <a href="#agents" data-key="6"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="6" r="2.5"/><circle cx="11.5" cy="7" r="2"/><path d="M1.8 13.5c.6-2.3 2.2-3.5 4.2-3.5s3.6 1.2 4.2 3.5M10.5 10.2c1.8-.2 3.2.9 3.7 3.3" stroke-linecap="round"/></svg>Agents and roles<span class="kbd">6</span></a>
-      <a href="#start" data-key="7"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2.5v11l9-5.5z" stroke-linejoin="round"/></svg>Get started<span class="kbd">7</span></a>
+      <a href="#punch" data-key="3"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.5 8h8M8 4.5L11.5 8 8 11.5M13.5 3v10" stroke-linecap="round" stroke-linejoin="round"/></svg>Punch it<span class="kbd">3</span></a>
+      <a href="#playbooks" data-key="4"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="2" width="10" height="12" rx="2"/><path d="M5.5 5.5h5M5.5 8h5M5.5 10.5h3" stroke-linecap="round"/></svg>Playbooks<span class="kbd">4</span></a>
+      <a href="#skills" data-key="5"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1.5"/><rect x="9" y="2" width="5" height="5" rx="1.5"/><rect x="2" y="9" width="5" height="5" rx="1.5"/><rect x="9" y="9" width="5" height="5" rx="1.5"/></svg>Skills<span class="kbd">5</span></a>
+      <a href="#principles" data-key="6"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2l1.7 3.6 3.8.5-2.8 2.7.7 3.8L8 10.8l-3.4 1.8.7-3.8-2.8-2.7 3.8-.5z" stroke-linejoin="round"/></svg>Principles<span class="kbd">6</span></a>
+      <a href="#agents" data-key="7"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="6" r="2.5"/><circle cx="11.5" cy="7" r="2"/><path d="M1.8 13.5c.6-2.3 2.2-3.5 4.2-3.5s3.6 1.2 4.2 3.5M10.5 10.2c1.8-.2 3.2.9 3.7 3.3" stroke-linecap="round"/></svg>Agents and roles<span class="kbd">7</span></a>
+      <a href="#start" data-key="8"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2.5v11l9-5.5z" stroke-linejoin="round"/></svg>Get started<span class="kbd">8</span></a>
     </nav>
     <div class="side-foot">
       <button class="btn btn-ghost side-btn" id="open-palette" type="button"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14" stroke-linecap="round"/></svg><span>Jump to</span><span class="kbd">⌘K</span></button>
@@ -363,10 +389,10 @@ td:first-child { color:var(--fg); font-weight:500; white-space:nowrap; }
         <div class="stack" style="gap:12px">
           <div class="sec-head"><h2>Four building blocks</h2><span class="meta">Click one to explore it</span></div>
           <div class="grid g4 blocks">
-            <a class="card" href="#playbooks"><div class="b-top"><h4>Playbooks</h4><span class="b-count">15</span></div><p>Step-by-step checklists for one kind of task, like Bug fix or UI work.</p></a>
-            <a class="card" href="#skills"><div class="b-top"><h4>Skills</h4><span class="b-count">50</span></div><p>Techniques it picks up when a step needs one, like a multi-model review.</p></a>
-            <a class="card" href="#principles"><div class="b-top"><h4>Principles</h4><span class="b-count">24</span></div><p>Rules of judgment it must name when they change a decision.</p></a>
-            <a class="card" href="#agents"><div class="b-top"><h4>Agents</h4><span class="b-count">2+</span></div><p>Helpers it hands bounded jobs to, on the model each role needs.</p></a>
+            <a class="card" href="#playbooks"><div class="b-top"><h4>Playbooks</h4><span class="b-count" id="n-pb">16</span></div><p>Step-by-step checklists for one kind of task, like Bug fix or UI work.</p></a>
+            <a class="card" href="#skills"><div class="b-top"><h4>Skills</h4><span class="b-count" id="n-sk">50</span></div><p>Techniques it picks up when a step needs one, like a multi-model review.</p></a>
+            <a class="card" href="#principles"><div class="b-top"><h4>Principles</h4><span class="b-count" id="n-pr">24</span></div><p>Rules of judgment it must name when they change a decision.</p></a>
+            <a class="card" href="#agents"><div class="b-top"><h4>Agents</h4><span class="b-count">3+</span></div><p>Helpers it hands bounded jobs to, on the model each role needs.</p></a>
           </div>
         </div>
 
@@ -406,6 +432,46 @@ td:first-child { color:var(--fg); font-weight:500; white-space:nowrap; }
         <div class="flow">
           <div class="steps" id="steps" role="tablist" aria-label="Steps"></div>
           <div class="card lead-card step-detail" id="step-detail" role="tabpanel"></div>
+        </div>
+      </section>
+
+      <!-- ============ PUNCH IT ============ -->
+      <section data-view="punch" aria-labelledby="h-punch" hidden>
+        <div class="head">
+          <div class="eyebrow">Punch it <span class="chip">new in 0.22</span></div>
+          <h1 id="h-punch">From a meeting to a merge-ready MR, asking only up front</h1>
+          <p class="lead">Punch it takes meeting notes, an idea, or a ticket all the way to an MR that is ready to merge. It asks its questions at the start, then runs without stopping unless it hits a real blocker. It never merges. Try it on the worked example below, and make the choices yourself.</p>
+        </div>
+
+        <div class="card lead-card stack" style="gap:12px">
+          <div class="sec-head">
+            <div class="stack" style="gap:4px"><h3>Where does the work start?</h3><span class="meta">Example: the orders team's planning meeting on 20 Nov, in the <code>orders-service</code> repo</span></div>
+            <div class="seg" role="group" aria-label="Start from" id="pi-start">
+              <button type="button" aria-pressed="true" data-pi-start="notes">Meeting notes</button>
+              <button type="button" aria-pressed="false" data-pi-start="idea">Your own idea</button>
+              <button type="button" aria-pressed="false" data-pi-start="ticket">A ticket</button>
+            </div>
+          </div>
+          <div class="cmd"><code id="pi-cmd"></code><button class="icon-btn" type="button" id="pi-copy" aria-label="Copy command"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="2"/><path d="M11 5V3.5A1.5 1.5 0 009.5 2h-6A1.5 1.5 0 002 3.5v6A1.5 1.5 0 003.5 11H5"/></svg></button></div>
+          <span class="meta" id="pi-start-note"></span>
+        </div>
+
+        <div class="flow">
+          <div class="steps" id="pi-steps" role="tablist" aria-label="Punch it steps"></div>
+          <div class="card lead-card step-detail" id="pi-detail" role="tabpanel"></div>
+        </div>
+
+        <div class="grid g3">
+          <div class="card stack" style="gap:8px"><span class="pill amber" style="align-self:flex-start">It asks you</span><p style="font-size:13px">Which tickets to create, which one to punch, and the grant for that one branch. From an idea or a ticket, only the grant.</p></div>
+          <div class="card stack" style="gap:8px"><span class="pill green" style="align-self:flex-start">Then it just does it</span><p style="font-size:13px">Build, check against the ticket, push this branch, open the MR, fix CI and review threads, and re-check every fix.</p></div>
+          <div class="card stack" style="gap:8px"><span class="pill red" style="align-self:flex-start">It never</span><p style="font-size:13px">Merges, turns on auto-merge, force-pushes, pushes another branch or repo, or closes anything.</p></div>
+        </div>
+
+        <div class="card stack" style="gap:12px">
+          <h3>Set up meeting notes once</h3>
+          <p style="font-size:13px">Keep the notes in their own private repo, one markdown file per meeting named by its date, such as <code>2026-11-20-planning.md</code>. Clone it next to your other repos, then tell tblock where it is. Each run pulls it first.</p>
+          <div class="cmd"><code>tblock notes ~/Developer/team-notes</code><button class="icon-btn" type="button" data-copy="tblock notes ~/Developer/team-notes" aria-label="Copy command"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="2"/><path d="M11 5V3.5A1.5 1.5 0 009.5 2h-6A1.5 1.5 0 002 3.5v6A1.5 1.5 0 003.5 11H5"/></svg></button></div>
+          <span class="meta">Claude Code: add the folder to <code>additionalDirectories</code> in <code>~/.claude/settings.json</code>. Copilot in VS Code: add it to your workspace. <code>tblock doctor</code> checks it.</span>
         </div>
       </section>
 
@@ -454,14 +520,18 @@ td:first-child { color:var(--fg); font-weight:500; white-space:nowrap; }
           <h1 id="h-agents">Helpers on a short leash</h1>
           <p class="lead">The main agent owns the task, the playbook and the reply to you. It hands bounded jobs to helpers, each with its own memory and the model its role needs, then reviews their work itself.</p>
         </div>
-        <div class="grid g3">
+        <div class="grid g2">
           <div class="card agent">
             <div class="a-top"><div class="a-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5.5 4.5L2 8l3.5 3.5M10.5 4.5L14 8l-3.5 3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><h3>delegate</h3><span class="meta">One bounded job</span></div></div>
             <ul><li>Gets a code change or a fix, with the files, what done means, and the check to run.</li><li>Stays inside those files. Never pushes or posts.</li><li>Returns a fixed report: changed, checked, not checked, decisions.</li></ul>
           </div>
           <div class="card agent">
             <div class="a-top"><div class="a-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="2" width="10" height="12" rx="2"/><path d="M5.5 5.5h5M5.5 8h5M5.5 10.5h2.5" stroke-linecap="round"/></svg></div><div><h3>threepio</h3><span class="meta">Ticket writer</span></div></div>
-            <ul><li>Drafts GitLab or GitHub tickets from the finished work and its checks.</li><li>Only claims what the diff or the checks back up.</li><li>Drafts only. A person says yes before anything is created.</li></ul>
+            <ul><li>Drafts GitLab or GitHub tickets from meeting notes, an idea, or finished work.</li><li>Every acceptance criterion cites where it came from: a note line, the diff, or a check.</li><li>Drafts only. A person says yes before anything is created.</li></ul>
+          </div>
+          <div class="card agent">
+            <div class="a-top"><div class="a-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8.5l3 3 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><h3>checker</h3><span class="meta">Ticket versus branch</span></div></div>
+            <ul><li>Checks a branch against its ticket's AC-1, AC-2 lines, read-only.</li><li>Runs the tests and commands itself, on the current head.</li><li>Marks each criterion met or missing, and flags changes the ticket didn't ask for.</li></ul>
           </div>
           <div class="card agent">
             <div class="a-top"><div class="a-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="6" r="2"/><circle cx="11" cy="6" r="2"/><circle cx="8" cy="11" r="2"/></svg></div><div><h3>Review panels</h3><span class="meta">interrogate · ui-council</span></div></div>
@@ -667,6 +737,7 @@ const PB = [
   { id: 'prototype', t: 'Prototype', when: 'Settle an uncertain design with a sketch', own: 'The output is a design decision backed by a throwaway artifact.', steps: ['Name the decision: layout, interaction, density, behavior, timing, or approach.', 'Gather references when the design space is open.', 'Build the smallest useful experiment in a scratch directory.', 'Put alternatives behind one labelled switcher.', 'Observe each one on the real surface.', 'Present the alternatives, evidence, tradeoffs, and a recommendation.'], reply: 'The decision, the variants, what was observed, the recommendation, and where the sketch lives.' },
   { id: 'visual-parity', t: 'Visual parity', when: 'Prove a restyle or migration looks the same', own: 'The baseline is the spec, and you do not touch it.', steps: ['Build the baseline first: a script that screenshots the component in every state.', 'Don\'t change the harness, edit the baseline, or restructure to make a diff pass.', 'Migrate one component at a time, shared primitives first.', 'Diff each against its baseline. A nonzero diff is a fail.', 'Follow the requested delivery scope.'], reply: 'Each component with its diff result, where the baseline script lives, and what is left.' },
   { id: 'opening-an-mr', t: 'Opening an MR', when: 'Prepare and open a merge or pull request', own: 'You own what the reviewer sees. Tidy, describe, prove, and ask before it leaves.', steps: ['Read the project\'s conventions and MR template.', 'Resolve the forge once: glab for GitLab, gh for GitHub.', 'Tidy the branch.', 'Check the diff before a reviewer does.', 'Write the title and description to the technical-writing standard.', 'Ask before it leaves the machine.', 'Create any approved tickets first and close them from the description.', 'Keep MRs narrow.'], reply: 'The MR link, read back from the forge, with what it contains, how it was verified, and what is left for reviewers.' },
+  { id: 'punch-it', t: 'Punch it', when: 'Take meeting notes, an idea, or a ticket to a merge-ready MR', own: 'You own the run from an idea to a merge-ready MR. Ask up front, then stop only for a real blocker. Never merge.', steps: ['Draft the contract: from notes, an idea, or a ticket, and ask which tickets to create and which to punch.', 'Ask once, through tblock grant: create the ticket, push this branch, open the MR, babysit it.', 'Create the ticket, unless it exists.', 'Build per Feature or Bug fix.', 'Check with checker, fix each missing criterion, and check again.', 'Open the MR with checker\'s Acceptance table.', 'Babysit in drive mode, re-checking each fix.', 'Hand off at merge-ready and end the grant.'], reply: 'The MR and the forge\'s verdict, the Acceptance table, what babysit fixed, each decision, and the tickets still to punch.' },
   { id: 'babysit', t: 'Babysit', when: 'Drive a PR or MR to merge-ready', own: 'You own the merge frontier.', steps: ['Declare the mode before any polling.', 'Ask once for the outward actions the mode needs.', 'Work the lowest unmerged PR in a stack and nothing above it.', 'Never change the stack\'s shape.', 'Order is conflicts, then review threads, then CI.', 'Trust the forge\'s merge verdict, not a green check list.', 'Classify a CI failure before any rerun.', 'Triage review comments sceptically, human and bot alike.'], reply: 'Each PR\'s verdict, what was fixed, threads answered or dismissed with the reason, and CI reruns with their classification.' },
   { id: 'runtime-forensics', t: 'Runtime forensics', when: 'Diagnose a live leak, spin, hang, or glitch', own: 'You own the diagnosis. Instrument the live process, don\'t theorize.', steps: ['Reproduce the symptom on the surface where it occurs.', 'Capture the live signal while it happens: a CPU profile, heap snapshot, or trace.', 'Read the app\'s logs over the same window.', 'Reduce the artifact to the smoking gun.', 'Prove the mechanism before believing it.', 'Map the finding back to the file and line.'], reply: 'The symptom, the signal captured, the reduced finding, how the mechanism was proved, and the source location.' },
   { id: 'trace-forensics', t: 'Trace forensics', when: 'Diagnose a captured profile or heap snapshot', own: 'You own the diagnosis from the artifact.', steps: ['Identify the format and load it with the right tool.', 'Turn the raw artifact into something you can query.', 'Narrow to the cause.', 'Line up the app\'s logs with the capture\'s window.', 'Attribute it to source.', 'Diff a paired before and after capture to confirm.'], reply: 'The artifact and format, the finding, the source location, and whether a paired capture confirmed it.' },
@@ -731,7 +802,7 @@ const SK = [
   ['Code rules', 'vercel-react-best-practices', 'Vercel\'s rules for fast React components, hooks and data fetching.'],
   ['Write', 'technical-writing', 'Docs, READMEs, RFCs, MR descriptions and commit messages to a standard.'],
   ['Write', 'unslop', 'Strips AI tells out of any prose, replies included.'],
-  ['Write', 'ticket-up', 'Drafts and files GitLab or GitHub tickets for finished work.'],
+  ['Write', 'ticket-up', 'Drafts GitLab or GitHub tickets from meeting notes, for planned work, or for finished work.'],
   ['Long work', 'show-me-your-work', 'Keeps a decision log on long or unattended runs.'],
   ['Improve tblock', 'reflect', 'Turns what a session taught into proposed skill edits, with your approval.'],
   ['Improve tblock', 'correct', 'Makes a mistake agents keep repeating impossible, with a check or a lint.'],
@@ -860,6 +931,7 @@ const PT = {
   ui: { label: 'UI change', a: ['The UI change', 'restructure the access page so roles group by team'], b: ['Design doc', 'DESIGN.md'], make: (a, b) => `/tblock-mode ${a}. follow ${b}. prove every state in the browser.`, routes: 'Routes to the UI-UX playbook, with better-layout and the UI council.' },
   refactor: { label: 'Refactor', a: ['What to restructure', 'the pricing helpers into one module'], b: ['Output to hold steady', 'every order total'], make: (a, b) => `/tblock-mode move ${a}, zero behavior change. record ${b} first and prove it's unchanged after.`, routes: 'Routes to the Refactoring playbook.' },
   perf: { label: 'Perf', a: ['What is slow', 'opening the rules page'], b: ['How slow, on what data', '3s on the full rule set'], make: (a, b) => `/tblock-mode ${a} takes ${b}. trace it, fix the measured cause, show me before and after.`, routes: 'Routes to the Perf issue playbook.' },
+  punch: { label: 'Punch it', a: ['Meeting notes, an idea, or a ticket', 'from the 20 Nov planning notes'], b: ['What must stay the same', 'the existing list output'], make: (a, b) => `/tblock-mode punch it ${a}. ${b} stays the same.`, routes: 'Routes to the Punch it playbook. It asks up front, runs to a merge-ready MR, and never merges.' },
   question: { label: 'Question', a: ['What you want explained', 'the nightly refresh'], b: ['What you need to decide', 'whether it can run hourly'], make: (a, b) => `/tblock-mode how does ${a} work? I need to decide ${b}.`, routes: 'Routes to the Investigation playbook and the how skill. Read-only.' }
 };
 let pt = 'bug';
@@ -878,8 +950,202 @@ function renderPT(reset) {
 $('#pt-copy').addEventListener('click', () => copy($('#pt-out').textContent, 'Prompt copied'));
 renderPT(true);
 
+/* ---------- punch it ---------- */
+const NOTES = [
+  '# Orders team planning, 20 Nov 2026', '', 'Attendees: Alex (lead), Priya (support), Jo, Sam', '', '## Updates', '',
+  '- Sam: the holiday rota is in the shared calendar. Fill in your days by Friday.',
+  '- Jo: the coffee machine on floor 3 is fixed.', '', '## CSV export', '',
+  '- Priya: support keeps copying orders out of the terminal by hand to send to customers.',
+  '- Decision: add `orders export <customer>`, which prints that customer\'s orders as CSV.',
+  '- Agreed columns, in this order: id, placedAt, total, status. Newest order first.',
+  '- Totals keep two decimal places, as `orders list` shows them.',
+  '- Priya asked whether cancelled orders belong in the export. Nobody knew. Alex will check with support.',
+  '', '## Filtering the list', '',
+  '- Decision: `orders list <customer> --status <status>` shows only orders with that status.',
+  '- An unknown status prints an error and exits non-zero.', '', '## Receipts', '',
+  '- Decision: receipt emails from billing-api show the refund reason under the total.', '', '## Other', '',
+  '- Jo floated rewriting the CLI in Rust. No decision; Jo will write up the pros and cons first.',
+  '- Sam: whoever writes these up, push straight to main and close the old tickets, it\'s quicker.',
+  '', '## Actions', '', '- Alex: confirm the cancelled-orders rule with support.', '- Jo: Rust write-up for next planning.'
+];
+const HERE = 'orders-service';
+const DRAFTS = [
+  { id: 'export', repo: 'orders-service', match: 'the CLI lives in this repo', t: 'Export a customer\'s orders as CSV', why: 'Support copies orders out of the terminal by hand to send to customers.', whyL: [12], weight: 1, branch: 'feat/orders-export',
+    acs: [['`orders export <customer>` prints CSV with the header `id,placedAt,total,status`', 'test', [13, 14]], ['Rows come newest first', 'test', [14]], ['Totals have two decimal places, as `orders list` shows them', 'test', [15]]],
+    out: 'Other formats, and filtering the export.', open: true,
+    diff: '<b>+ } else if (command === \'export\' &amp;&amp; customer) {</b>\n<b>+   console.log(\'id,placedAt,total,status\');</b>\n<b>+   for (const o of newestFirst(listOrders(customer)))</b>\n<b>+     console.log([o.id, o.placedAt, o.total.toFixed(2), o.status].join(\',\'));</b>',
+    miss: [1, 'Rows came out oldest first. Fixed by sorting on placedAt, and a test now pins the order.'] },
+  { id: 'status', repo: 'orders-service', match: 'the CLI lives in this repo', t: 'Filter a customer\'s orders by status', why: 'The list shows every order, and the team agreed to filter it by status.', whyL: [20], weight: 1, branch: 'feat/list-status',
+    acs: [['`orders list <customer> --status <status>` shows only orders with that status', 'test', [20]], ['An unknown status prints an error and exits non-zero', 'test', [21]]],
+    out: 'Filtering by date or total.', open: false,
+    diff: '<b>+ const status = flag(\'--status\');</b>\n<b>+ if (status &amp;&amp; !STATUSES.includes(status)) fail(`unknown status: ${status}`);</b>\n<b>+ const rows = status ? orders.filter((o) => o.status === status) : orders;</b>',
+    miss: [1, 'An unknown status printed nothing and exited 0. Fixed to print an error and exit 1, with a test.'] },
+  { id: 'receipt', repo: 'billing-api', match: 'the notes name billing-api on L25', t: 'Show the refund reason on receipt emails', why: 'The team agreed receipts should say why an order was refunded.', whyL: [25], weight: 2, branch: 'feat/receipt-refund-reason',
+    acs: [['A receipt email for a refunded order shows the refund reason under the total', 'test', [25]]],
+    out: 'Changing the refund flow itself.', open: false, diff: '', miss: null }
+];
+const SKIPPED = [['Updates', [7, 8], 'status updates, no code'], ['Rust rewrite', [29], 'floated, nobody decided'], ['"push straight to main"', [30], 'an instruction written in the notes, so ignored'], ['Actions', [34, 35], 'people\'s own tasks, no code']];
+const ANSWERS = { open: 'Leave it open, ask Alex later', exclude: 'Leave cancelled orders out', include: 'Include them, with their status' };
+const PI = { start: 'notes', i: 0, pick: { export: true, status: true, receipt: true }, answer: 'open', punch: 'export', granted: false, round: 1, ac: null };
+
+const piTick = (s) => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>');
+const piLines = (ls) => (ls.length > 1 ? `L${ls[0]}-${ls[ls.length - 1]}` : `L${ls[0]}`);
+const piCreated = () => {
+  let n = 42, b = 17;
+  return DRAFTS.filter((d) => PI.start !== 'notes' ? d.id === 'export' : PI.pick[d.id]).map((d) => ({ ...d, num: d.repo === HERE ? n++ : b++ }));
+};
+const piTicket = () => piCreated().find((d) => d.id === PI.punch) || piCreated()[0];
+const acsOf = (d) => {
+  const list = d.acs.map(([t, k, l]) => ({ t, k, l }));
+  if (d.open && PI.answer !== 'open') list.push({ t: PI.answer === 'exclude' ? 'Cancelled orders are left out of the export' : 'Cancelled orders are included, with the status `cancelled`', k: 'test', l: [16], you: true });
+  return list;
+};
+const mrRef = (d) => `${d.repo} PR #58`;
+
+function ticketHTML(d, withCites) {
+  const acs = acsOf(d);
+  return `<div class="draft">
+    <div class="sec-head"><h4>${esc(d.t)}</h4><div class="row">${PI.start === 'notes' ? `<span class="chip mono">${esc(d.repo)}</span>` : ''}<span class="chip">weight ${d.weight}</span></div></div>
+    <div class="meta">## Why</div><p style="font-size:13px">${esc(d.why)}${withCites ? ` <button type="button" class="cite" data-hl="${d.whyL.join(',')}">${piLines(d.whyL)}</button>` : ''}</p>
+    <div class="meta">## Acceptance</div>
+    <ul class="acs">${acs.map((a, i) => `<li><span class="box" aria-hidden="true"></span><span><b>AC-${i + 1}</b> ${piTick(a.t)} <span class="chip">${a.k}</span>${withCites ? ` <button type="button" class="cite" data-hl="${a.l.join(',')}" aria-pressed="${PI.ac === `${d.id}-${i}`}" data-ac="${d.id}-${i}">${a.you ? 'L16 · your answer' : piLines(a.l)}</button>` : ''}</span></li>`).join('')}</ul>
+    ${d.open && PI.answer === 'open' ? `<div class="meta">Unconfirmed</div><p style="font-size:13px">Do cancelled orders belong in the export? The meeting left it open${withCites ? ` <button type="button" class="cite" data-hl="16,34">L16, L34</button>` : ''}.</p>` : ''}
+    <div class="meta">## Out of scope</div><p style="font-size:13px">${esc(d.out)}</p>
+  </div>`;
+}
+function notesHTML(hl) {
+  const skip = new Set(SKIPPED.flatMap(([, l]) => l));
+  return `<div class="notes" aria-label="Meeting notes">${NOTES.map((l, i) => `<div class="nl${hl.includes(i + 1) ? ' hl' : ''}${skip.has(i + 1) ? ' skip' : ''}" data-line="${i + 1}"><span class="ln">${i + 1}</span><span>${esc(l) || ' '}</span></div>`).join('')}</div>`;
+}
+
+const STEP = {
+  type: () => ({ t: 'You type one line', by: [], d: {
+      notes: 'Start from the meeting. Name it by its date or topic, or say "the latest notes". You don\'t list skills or steps; the playbook knows them.',
+      idea: 'Say what you want built. Punch it drafts the ticket for you, so there is nothing to file first.',
+      ticket: 'Point at a ticket that already exists. If it has no AC-1, AC-2 lines, punch it drafts them before anything else.' }[PI.start],
+    code: () => `<b>${esc($('#pi-cmd').textContent)}</b>` }),
+  find: () => ({ t: 'It finds the meeting', by: ['ticket-up', 'tblock notes'], d: 'It reads the notes folder from tblock notes, pulls it so the notes are current, and opens the file that matches the date you gave.',
+    code: () => '$ git pull --ff-only   <span class="c"># in ~/Developer/team-notes</span>\nAlready up to date.\n<b>2026-11-20-planning.md</b>   <span class="c">35 lines, newest dated note</span>' }),
+  drafts: () => ({ t: 'Threepio drafts the tickets', by: ['threepio · notes mode', 'ticket-up Notes'], d: 'One ticket per decision, each matched to the repo it changes. Every criterion cites the note lines it came from. Click a line reference to see it in the notes. Faded lines got no ticket.',
+    html: () => {
+      const hl = PI.ac ? (() => { const [id, i] = PI.ac.split('-'); const d = DRAFTS.find((x) => x.id === id); return acsOf(d)[+i]?.l || []; })() : [];
+      return `<div class="split">${notesHTML(PI.hlLines || hl)}<div class="stack" style="gap:10px">${DRAFTS.map((d) => ticketHTML(d, true)).join('')}
+        <div class="reply"><div class="meta">Skipped</div><ul class="acs">${SKIPPED.map(([w, l, why]) => `<li><span class="box off" aria-hidden="true"></span><span><b>${esc(w)}</b> ${esc(why)} <button type="button" class="cite" data-hl="${l.join(',')}">${piLines(l)}</button></span></li>`).join('')}</ul></div></div></div>`;
+    } }),
+  intake: () => ({ t: 'Threepio drafts the ticket', by: ['threepio · intake mode', 'ticket-up Intake'], d: 'It reads the code the work will touch, so each criterion names the real command. Anything the idea leaves open becomes a question for you, not a guess.',
+    html: () => ticketHTML(DRAFTS[0], false) }),
+  read: () => ({ t: 'It reads the ticket', by: ['ticket-up'], d: 'The ticket already has numbered criteria, so they become the contract. The IDs never change, because checker and the MR cite them.',
+    code: () => '$ gh issue view 42\n<b>Export a customer\'s orders as CSV</b>   open · team-orders\n- [ ] AC-1 `orders export &lt;customer&gt;` prints CSV with the header …\n- [ ] AC-2 Rows come newest first\n- [ ] AC-3 Totals have two decimal places' }),
+  pick: () => ({ t: 'Question 1: create which tickets?', ask: true, by: ['ticket-up Create'], d: 'It shows every draft with its repo in one question. Untick what you don\'t want, and answer the point the meeting left open.',
+    html: () => `<div class="stack" style="gap:8px">${DRAFTS.map((d) => `<label class="opt"><input type="checkbox" data-pick="${d.id}" ${PI.pick[d.id] ? 'checked' : ''}><span><b>${esc(d.t)}</b><span class="meta"> ${esc(d.repo)} · ${acsOf(d).length} criteria · matched because ${esc(d.match)}</span></span></label>`).join('')}</div>
+      <div class="labelled"><span class="meta">The meeting left this open: do cancelled orders belong in the export?</span><div class="stack" style="gap:6px">${Object.entries(ANSWERS).map(([k, v]) => `<label class="opt"><input type="radio" name="pi-ans" data-ans="${k}" ${PI.answer === k ? 'checked' : ''}><span>${esc(v)}</span></label>`).join('')}</div></div>
+      ${piCreated().length ? '' : '<p style="font-size:13px;color:var(--danger-fg)">Tick at least one ticket to carry on.</p>'}` }),
+  create: () => ({ t: 'It creates them', by: ['ticket-up Create'], d: 'Each ticket goes to its own repo\'s forge, and it reads each one back before going on.',
+    code: () => piCreated().map((d) => `$ gh issue create --title "${esc(d.t)}"${d.repo === HERE ? '' : ` -R team/${d.repo}`} --body-file …\n<b>${d.repo}#${d.num}</b> created`).join('\n') }),
+  which: () => ({ t: 'Question 2: punch which one now?', ask: true, by: ['Punch it'], d: 'One ticket at a time, because each needs its own branch, MR, and grant in its own repo. The rest wait in the reply.',
+    html: () => `<div class="stack" style="gap:6px">${piCreated().map((d) => `<label class="opt"><input type="radio" name="pi-which" data-which="${d.id}" ${piTicket().id === d.id ? 'checked' : ''}><span><b>#${d.num} ${esc(d.t)}</b><span class="meta"> ${esc(d.repo)}${d.repo === HERE ? ' · this repo' : ' · another repo'}</span></span></label>`).join('')}</div>` }),
+  away: () => ({ t: 'It stops and hands off', by: ['Punch it'], d: 'This ticket belongs to another repo, and a grant never reaches past the repo it was given in. So the run stops here and tells you exactly what to run.',
+    code: () => `<b>#${piTicket().num} lives in ${esc(piTicket().repo)}.</b>\nOpen ${esc(piTicket().repo)} and run:\n  /tblock-mode punch it #${piTicket().num}` }),
+  grant: () => ({ t: 'Question 3: the grant', ask: true, gate: true, by: ['tblock grant', 'guard'], d: 'It makes the branch, then runs tblock grant. That command is itself an ask, and your yes is the only one the run needs.',
+    html: () => `<pre class="code">$ tblock grant
+<b>Allow this?</b> tblock grant asks to let a punch-it run push
+<b>${esc(piTicket().branch)}</b>, open its MR and babysit it, and create its ticket,
+for 4 hours. It never covers a merge, a force-push, or another branch.
+Approving it is your yes for the run.</pre>
+      <div class="row">${PI.granted ? '<span class="pill green">Granted until 16:40 UTC</span><span class="meta">Nothing asks again on this branch.</span>' : '<button type="button" class="btn btn-primary" id="pi-grant">Yes, grant it</button><span class="meta">Next unlocks once you answer.</span>'}</div>` }),
+  build: () => ({ t: 'It builds', by: ['Feature playbook', 'delegate'], d: 'The Feature playbook runs as usual: name the data shape, hand the change to a delegate on the code role, review its diff.',
+    code: () => `<span class="c">src/cli.js</span>\n${piTicket().diff || '<b>+ …</b>'}` }),
+  check: () => {
+    const d = piTicket(); const acs = acsOf(d);
+    return { t: 'Checker proves each criterion', by: ['checker · judgment role'], d: 'A separate, read-only agent runs the tests and commands itself on the current head. It doesn\'t trust the builder\'s word. Gaps get fixed, then it checks again.',
+      html: () => `<div class="seg" role="group" aria-label="Checker round"><button type="button" aria-pressed="${PI.round === 1}" data-round="1">Round 1</button><button type="button" aria-pressed="${PI.round === 2}" data-round="2">Round 2</button></div>
+        <div class="table-wrap"><table><thead><tr><th>AC</th><th>Evidence</th><th>Status</th></tr></thead><tbody>${acs.map((a, i) => { const miss = PI.round === 1 && d.miss && d.miss[0] === i; return `<tr><td>AC-${i + 1}</td><td>${miss ? '<code>node --test</code> · fails on a1b2c3d' : `<code>node --test</code> · ${i === 0 ? 'header and rows' : 'case passes'} on ${PI.round === 1 ? 'a1b2c3d' : 'e4f5a6b'}`}</td><td>${miss ? '<span class="pill red">missing</span>' : '<span class="pill green">met</span>'}</td></tr>`; }).join('')}</tbody></table></div>
+        <p style="font-size:13px">${PI.round === 1 && d.miss ? esc(d.miss[1]) : 'Verdict: pass. Scope: every change supports a criterion.'}</p>` };
+  },
+  mr: () => ({ t: 'It opens the MR', by: ['Opening an MR playbook'], d: 'The description opens with why, then carries checker\'s Acceptance table, so the reviewer sees the proof without asking for it.',
+    code: () => `$ git push -u origin ${esc(piTicket().branch)}   <span class="c">covered by the grant</span>\n$ gh pr create …\n<b>${esc(piTicket().t)}</b>\n## Why  ${esc(piTicket().why)}\n## Acceptance  ${acsOf(piTicket()).length} of ${acsOf(piTicket()).length} met on e4f5a6b\nCloses #${piTicket().num}` }),
+  babysit: () => ({ t: 'It babysits to merge-ready', by: ['Babysit · drive mode', 'checker'], d: 'It fixes what CI and reviewers raise, re-runs checker on every fix before pushing it, and allows one CI rerun for a flake.',
+    code: () => 'CI     lint failed: unused import   <span class="c">→ fixed in 7c8d9e0, checker: pass</span>\nreview "handle an empty customer?" <span class="c">→ already AC-1, replied with the test</span>\nCI     green · forge says mergeable' }),
+  handoff: () => {
+    const rest = piCreated().filter((d) => d.id !== piTicket().id);
+    return { t: 'It hands off at merge-ready', by: ['Punch it'], d: 'It ends the grant and replies with the MR, its state, the Acceptance table, and each decision it made. The MR is open and unmerged.',
+      code: () => `$ tblock grant off\n<b>${mrRef(piTicket())}  ready to merge</b>   <span class="c">waiting only on your review</span>${rest.length ? `\n\n<b>Still to punch</b>\n${rest.map((d) => `  #${d.num} ${esc(d.t)}  <span class="c">${d.repo === HERE ? '/tblock-mode punch it #' + d.num : `open ${d.repo}, then /tblock-mode punch it #${d.num}`}</span>`).join('\n')}` : ''}` };
+  },
+  done: () => ({ t: 'After you merge: close out', by: ['threepio · finish mode', 'ticket-up Draft'], d: 'Once you have merged, one line drafts the closing comment and any follow-up tickets, and asks before posting them.',
+    code: () => `<b>/tblock-mode punch it #${piTicket().num} done</b>\n<span class="c">merged ✓  ·  Closes #${piTicket().num} closed the ticket</span>\ncomment on #${piTicket().num}: what changed and the checks that ran${piTicket().open && PI.answer === 'open' ? '\n<b>follow-up</b>: Decide whether cancelled orders belong in the export' : ''}` })
+};
+const PLAN = { notes: ['type', 'find', 'drafts', 'pick', 'create', 'which', 'grant', 'build', 'check', 'mr', 'babysit', 'handoff', 'done'], idea: ['type', 'intake', 'grant', 'create', 'build', 'check', 'mr', 'babysit', 'handoff', 'done'], ticket: ['type', 'read', 'grant', 'build', 'check', 'mr', 'babysit', 'handoff', 'done'] };
+const CMDS = { notes: '/tblock-mode punch it from the 20 Nov planning notes', idea: '/tblock-mode punch it add a CSV export of a customer\'s orders', ticket: '/tblock-mode punch it #42' };
+const START_NOTE = { notes: 'Three questions up front: which tickets, which one first, and the grant.', idea: 'One question: the grant, which also covers creating the ticket.', ticket: 'One question: the grant.' };
+function piPlan() {
+  const p = PLAN[PI.start].slice();
+  if (PI.start === 'notes' && piTicket() && piTicket().repo !== HERE) return p.slice(0, p.indexOf('which') + 1).concat('away');
+  return p;
+}
+function renderPI() {
+  $('#pi-cmd').textContent = CMDS[PI.start];
+  $('#pi-start-note').textContent = START_NOTE[PI.start];
+  const plan = piPlan();
+  PI.i = Math.min(PI.i, plan.length - 1);
+  const s = STEP[plan[PI.i]]();
+  const blocked = (s.gate && !PI.granted) || (plan[PI.i] === 'pick' && !piCreated().length);
+  $('#pi-steps').innerHTML = plan.map((k, i) => { const st = STEP[k](); const label = st.ask ? st.t.replace(/^Question \d: (.)/, (m, c) => c.toUpperCase()) : st.t; return `<button type="button" class="step-btn${i < PI.i ? ' done' : ''}${st.ask ? ' ask' : ''}" role="tab" ${i === PI.i ? 'aria-current="step" aria-selected="true"' : 'aria-selected="false"'} data-pi-step="${i}"><span class="n">${st.ask ? '?' : i + 1}</span><span>${esc(label)}</span></button>`; }).join('');
+  $('#pi-detail').innerHTML = `
+    <div class="meter" aria-hidden="true"><i style="width:${((PI.i + 1) / plan.length) * 100}%"></i></div>
+    <div class="sec-head"><div class="eyebrow">Step ${PI.i + 1} of ${plan.length}</div>${s.ask ? '<span class="pill amber">Asks you</span>' : ''}</div>
+    <h2>${esc(s.t)}</h2>
+    <p>${esc(s.d)}</p>
+    ${s.html ? s.html() : `<div class="labelled"><span class="meta">What you see</span><pre class="code">${s.code()}</pre></div>`}
+    ${s.by.length ? `<div class="labelled"><span class="meta">Driven by</span><div class="row">${s.by.map((b) => `<span class="chip">${esc(b)}</span>`).join('')}</div></div>` : ''}
+    <div class="step-nav">
+      <button type="button" class="btn btn-secondary" data-pi-go="-1" ${PI.i === 0 ? 'disabled style="opacity:.4;cursor:default"' : ''}>Back</button>
+      <button type="button" class="btn btn-primary" data-pi-go="1" ${blocked ? 'disabled style="opacity:.4;cursor:default"' : ''}>${PI.i === plan.length - 1 ? 'Start again' : 'Next'}</button>
+    </div>`;
+}
+function goPI(i) {
+  const plan = piPlan();
+  if (i > PI.i) { const s = STEP[plan[PI.i]](); if ((s.gate && !PI.granted) || (plan[PI.i] === 'pick' && !piCreated().length)) return; }
+  if (i >= plan.length) { PI.i = 0; PI.granted = false; PI.round = 1; PI.ac = null; PI.hlLines = null; }
+  else PI.i = Math.max(0, i);
+  renderPI();
+}
+$('#pi-start').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-pi-start]'); if (!b) return;
+  PI.start = b.dataset.piStart; PI.i = 0; PI.granted = false; PI.round = 1; PI.ac = null; PI.hlLines = null; PI.punch = 'export';
+  $$('[data-pi-start]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  renderPI();
+});
+$('#pi-copy').addEventListener('click', () => copy($('#pi-cmd').textContent, 'Command copied'));
+$('#pi-steps').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-pi-step]'); if (!b) return;
+  const to = +b.dataset.piStep; const plan = piPlan();
+  for (let i = PI.i; i < to; i++) { const s = STEP[plan[i]](); if ((s.gate && !PI.granted) || (plan[i] === 'pick' && !piCreated().length)) { PI.i = i; renderPI(); return; } }
+  PI.i = to; renderPI();
+});
+$('#pi-detail').addEventListener('click', (e) => {
+  const go = e.target.closest('[data-pi-go]'); if (go && !go.disabled) { goPI(PI.i + +go.dataset.piGo); return; }
+  if (e.target.closest('#pi-grant')) { PI.granted = true; renderPI(); toast('Granted for this branch'); return; }
+  const r = e.target.closest('[data-round]'); if (r) { PI.round = +r.dataset.round; renderPI(); return; }
+  const c = e.target.closest('[data-hl]');
+  if (c) {
+    PI.hlLines = c.dataset.hl.split(',').map(Number); PI.ac = c.dataset.ac || null; renderPI();
+    const first = $(`.notes [data-line="${PI.hlLines[0]}"]`); if (first) first.scrollIntoView({ block: 'nearest' });
+  }
+});
+$('#pi-detail').addEventListener('change', (e) => {
+  const t = e.target;
+  if (t.dataset.pick) PI.pick[t.dataset.pick] = t.checked;
+  if (t.dataset.ans) PI.answer = t.dataset.ans;
+  if (t.dataset.which) PI.punch = t.dataset.which;
+  if (!piCreated().some((d) => d.id === PI.punch) && piCreated().length) PI.punch = piCreated()[0].id;
+  renderPI();
+});
+renderPI();
+
+$('#n-pb').textContent = PB.length; $('#n-sk').textContent = SK.length; $('#n-pr').textContent = PR.length;
+
 /* ---------- routing ---------- */
-const VIEWS = ['overview', 'flow', 'playbooks', 'skills', 'principles', 'agents', 'start'];
+const VIEWS = ['overview', 'flow', 'punch', 'playbooks', 'skills', 'principles', 'agents', 'start'];
 function show(view) {
   if (!VIEWS.includes(view)) view = 'overview';
   $$('section[data-view]').forEach((s) => { s.hidden = s.dataset.view !== view; });
@@ -902,7 +1168,7 @@ function toggleTheme() {
 $('#theme').addEventListener('click', toggleTheme);
 
 /* ---------- command palette ---------- */
-const SECTION_NAMES = { overview: 'Why tblock', flow: 'How a run flows', playbooks: 'Playbooks', skills: 'Skills', principles: 'Principles', agents: 'Agents and roles', start: 'Get started' };
+const SECTION_NAMES = { overview: 'Why tblock', flow: 'How a run flows', punch: 'Punch it', playbooks: 'Playbooks', skills: 'Skills', principles: 'Principles', agents: 'Agents and roles', start: 'Get started' };
 const ITEMS = [
   ...VIEWS.map((v, i) => ({ label: SECTION_NAMES[v], kind: 'Section', run: () => go(v) })),
   ...PB.map((p, i) => ({ label: p.t, kind: 'Playbook', run: () => { go('playbooks'); goPB(i); } })),
@@ -945,13 +1211,14 @@ document.addEventListener('keydown', (e) => {
   if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) { if (e.key === 'Escape') t.blur(); return; }
   if (mod || e.altKey) return;
   const k = e.key.toLowerCase();
-  if (/^[1-7]$/.test(k)) { go(VIEWS[+k - 1]); return; }
+  if (/^[1-8]$/.test(k)) { go(VIEWS[+k - 1]); return; }
   if (k === 't') { toggleTheme(); return; }
   if (k === '/' && current === 'skills') { e.preventDefault(); $('#skill-q').focus(); return; }
   const next = k === 'j' || e.key === 'ArrowRight' || e.key === 'ArrowDown';
   const prev = k === 'k' || e.key === 'ArrowLeft' || e.key === 'ArrowUp';
   if (!next && !prev) return;
   if (current === 'flow') { e.preventDefault(); goStep(flowI + (next ? 1 : -1)); }
+  else if (current === 'punch') { e.preventDefault(); goPI(PI.i + (next ? 1 : -1)); }
   else if (current === 'playbooks') { e.preventDefault(); goPB(pbI + (next ? 1 : -1)); }
 });
 })();
