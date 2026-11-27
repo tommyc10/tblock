@@ -1,0 +1,56 @@
+<template>
+  <!-- One shot: a caption, one card, one action, a result, then push through to the next shot.
+       Prefix every id with the scene id; all scenes share one page. -->
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; }
+    #SCENE-stage { position: absolute; inset: 0; }
+    #SCENE-card { left: 460px; top: 300px; width: 1000px; height: 520px; }
+    #SCENE-card > div { position: absolute; left: 44px; right: 44px; }
+    #SCENE-hd { top: 40px; height: 48px; display: flex; align-items: center; gap: 14px; font-size: 34px; font-weight: 600; letter-spacing: -0.03em; white-space: nowrap; }
+    .SCENE-row { height: 72px; display: flex; align-items: center; gap: 18px; font-size: 32px; letter-spacing: -0.015em; white-space: nowrap; border-top: 1px solid var(--line); }
+    #SCENE-r0 { top: 120px; } #SCENE-r1 { top: 192px; } #SCENE-r2 { top: 264px; }
+    #SCENE-st { position: absolute; right: 0; top: 2px; width: 220px; height: 44px; }
+    #SCENE-st > span { position: absolute; right: 0; top: 0; }
+    #SCENE-st .b { opacity: 0; }
+    #SCENE-go { right: 44px; bottom: 40px; }
+  </style>
+  <div id="root" data-composition-id="SCENE" data-width="1920" data-height="1080">
+    <div id="SCENE-stage" class="clip" data-start="0" data-duration="5" data-track-index="0">
+      <div id="SCENE-capA" class="cap" data-text="Say what this shot *shows.*"></div>
+      <div id="SCENE-capB" class="cap" data-text="Then say what *changed.*" data-layout-allow-overlap></div>
+      <div id="SCENE-card" class="card">
+        <div id="SCENE-hd">The thing on screen<span id="SCENE-st"><span class="a chip">draft</span><span class="b chip ok" data-layout-allow-overlap>done</span></span></div>
+        <div id="SCENE-r0" class="SCENE-row"><span class="chip">one</span>A real detail from the source</div>
+        <div id="SCENE-r1" class="SCENE-row"><span class="chip">two</span>Another real detail</div>
+        <div id="SCENE-r2" class="SCENE-row"><span class="chip">three</span>The one that matters</div>
+        <div id="SCENE-go" class="btn primary" style="left:auto">Do the thing</div>
+      </div>
+      <div id="SCENE-you" class="cursor you" data-layout-allow-overlap data-layout-allow-overflow><svg viewBox="0 0 34 50"><path d="M3 3v38l10-10 7 16 6-3-7-15h14z" fill="#0f0f0f" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/></svg><span class="pill">you</span></div>
+    </div>
+  </div>
+  <!-- The beats of this shot, in scene seconds: [t, sound type, what happens, name]. build.mjs turns them
+       into cues.json; the timeline below reads the same times by name, so sound and picture can't drift. -->
+  <script type="application/json" id="SCENE-cues">
+    [[0.12, "appear", "card arrives", "card"],
+     [0.9, "hover_or_small_ui", "rows land", "rows"],
+     [2.6, "click", "you press the button", "click"],
+     [2.9, "success", "draft becomes done", "done"]]
+  </script>
+  <script>
+    (function () {
+      var F = window.FILM, tl = gsap.timeline({ paused: true }), C = F.cues("SCENE"), D = F.dur("SCENE");
+      var first = F.first("SCENE"); // frame 0 is the thumbnail: the first shot starts with its card on screen
+      F.capIn(tl, "#SCENE-capA", 0.05);
+      F.popIn(tl, "#SCENE-card", C.card, { shown: first });
+      F.rowIn(tl, ["#SCENE-hd", "#SCENE-r0", "#SCENE-r1", "#SCENE-r2"], first ? 0 : C.rows - 0.2, 0.08, first ? 0.75 : 0);
+      F.path(tl, "#SCENE-you", [[0, 1700, 1180], [C.click - 0.9, 1700, 1180], [C.click - 0.08, 1290, 770], [C.click + 0.5, 1290, 770], [C.click + 1.3, 1560, 1180]]);
+      F.click(tl, "#SCENE-you", "#SCENE-go", C.click);
+      F.capOut(tl, "#SCENE-capA", C.click - 0.5);
+      F.capIn(tl, "#SCENE-capB", C.click - 0.28);
+      F.swap(tl, "#SCENE-st .a", "#SCENE-st .b", C.done, "100% 50%");
+      F.drift(tl, "#SCENE-card", C.done + 0.4, D - C.done - 0.74);
+      F.through(tl, "#SCENE-stage", D - 0.34);
+      window.__timelines["SCENE"] = tl;
+    })();
+  </script>
+</template>

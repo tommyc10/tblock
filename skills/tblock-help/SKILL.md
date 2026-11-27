@@ -92,6 +92,7 @@ The default answer is tblock-mode, which runs most of the others when its steps 
 | Review motion code | [review-animations](../review-animations/SKILL.md) |
 | Strip motion that makes an app feel slow or over-animated | [remove-animations](../remove-animations/SKILL.md) |
 | Fix motion that drops frames | [animation-performance](../animation-performance/SKILL.md) |
+| Make a calm promo film or a step-by-step video guide, with music and sound | [film](../film/SKILL.md) |
 | Find where motion belongs, or audit all of it | [find-animation-opportunities](../find-animation-opportunities/SKILL.md), [improve-animations](../improve-animations/SKILL.md) |
 | Stress a UI with worst-case data | [break-ui](../break-ui/SKILL.md) |
 | Compare several versions of a UI behind a picker | [prototype](../prototype/SKILL.md) |

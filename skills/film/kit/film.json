@@ -1,0 +1,12 @@
+{
+  "title": "Example film",
+  "width": 1920,
+  "height": 1080,
+  "ground": "#f6f5f1",
+  "music": { "file": "sound-effects-cache/track.mp3", "beat": 0.48, "first": 0 },
+  "scenes": [
+    { "id": "intro", "dur": 5.4 },
+    { "id": "step", "dur": 6.0 },
+    { "id": "end", "dur": 3.8, "overlap": 0.4 }
+  ]
+}

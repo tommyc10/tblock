@@ -1,0 +1,57 @@
+/* The film's look. Swap the tokens for the brand's; keep the shapes, sizes and shadows. */
+@font-face { font-family: "Geist"; font-weight: 400; src: url("fonts/Geist-Regular.woff2") format("woff2"); }
+@font-face { font-family: "Geist"; font-weight: 500; src: url("fonts/Geist-Medium.woff2") format("woff2"); }
+@font-face { font-family: "Geist"; font-weight: 600; src: url("fonts/Geist-SemiBold.woff2") format("woff2"); }
+@font-face { font-family: "Geist"; font-weight: 700; src: url("fonts/Geist-Bold.woff2") format("woff2"); }
+@font-face { font-family: "Geist Mono"; font-weight: 400; src: url("fonts/GeistMono-Regular.woff2") format("woff2"); }
+@font-face { font-family: "Geist Mono"; font-weight: 500; src: url("fonts/GeistMono-Medium.woff2") format("woff2"); }
+
+:root {
+  --ground: #f6f5f1;   /* warm paper, never pure white */
+  --card: #ffffff;
+  --ink: #0f0f0f;      /* text */
+  --ink-2: #8c8b86;    /* secondary text; 28px or larger only */
+  --ink-3: #c2c0b9;    /* struck-out and disabled */
+  --line: #e6e4de;
+  --chip: #f1f0ec;
+  --green: #1f9d55;    /* passed, met, kept */
+  --red: #d42a31;      /* only for a removed line or a real failure */
+  --accent: linear-gradient(90deg, #ff4d6d, #ff7a45 55%, #ffc457); /* the one accent; captions, the key chip, "you" */
+  --accent-solid: #ff7a45;
+  --shadow: 0 1px 2px rgba(0,0,0,.04), 0 18px 40px rgba(20,18,10,.07);
+  --shadow-up: 0 1px 2px rgba(0,0,0,.05), 0 30px 70px rgba(20,18,10,.16); /* a sheet or dialog above the rest */
+  --sans: "Geist", sans-serif;
+  --mono: "Geist Mono", monospace;
+}
+
+.card { position: absolute; background: var(--card); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); }
+.card.up { border-radius: 26px; box-shadow: var(--shadow-up); }
+
+/* one caption per beat of the story, top centre */
+.cap { position: absolute; left: 0; width: 1920px; top: 130px; text-align: center; font-weight: 600; font-size: 64px; letter-spacing: -0.035em; white-space: nowrap; }
+.cap .w { display: inline-block; margin: 0 0.12em; }
+.accent { background: var(--accent); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+.chip { display: inline-flex; align-items: center; gap: 10px; height: 44px; padding: 0 18px; border-radius: 999px; font: 500 28px/1 var(--mono); letter-spacing: -0.02em; white-space: nowrap; background: var(--chip); color: #3a3a38; }
+.chip.ok { background: #e7f5ec; color: var(--green); font-family: var(--sans); }
+.chip.ink { background: var(--ink); color: #fff; font-family: var(--sans); }
+.chip.key { background: var(--accent); color: #fff; font-family: var(--sans); font-weight: 600; box-shadow: 0 8px 22px rgba(255,100,70,.28); }
+.muted { color: var(--ink-2); }
+.mono { font-family: var(--mono); letter-spacing: -0.02em; }
+
+/* a cursor with a name pill; .you takes the accent, a second actor takes its own colour */
+.cursor { position: absolute; left: 0; top: 0; width: 44px; height: 64px; will-change: transform; }
+.cursor svg { width: 34px; height: 50px; filter: drop-shadow(0 4px 8px rgba(0,0,0,.18)); }
+.cursor .pill { position: absolute; left: 30px; top: 40px; padding: 9px 18px; border-radius: 999px; white-space: nowrap; font: 500 28px/1 var(--sans); color: #fff; background: #2a2a2a; box-shadow: 0 6px 16px rgba(0,0,0,.14); }
+.cursor.you .pill { background: var(--accent); box-shadow: 0 6px 18px rgba(255,90,70,.32); }
+.cursor.bot .pill { background: linear-gradient(90deg, #8a6212, #a87a22); box-shadow: 0 6px 18px rgba(185,137,43,.3); }
+
+/* a button and a typed-prompt caret */
+.btn { position: absolute; height: 64px; padding: 0 36px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 600; white-space: nowrap; }
+.btn.primary { background: var(--ink); color: #fff; }
+.btn.ghost { border: 1.5px solid var(--line); color: #3a3a38; }
+.caret { display: inline-block; width: 3px; height: 48px; margin-left: 3px; vertical-align: -8px; background: var(--ink); border-radius: 2px; }
+
+/* the step counter for a guide: "Step 2 of 5", top left */
+.step { position: absolute; left: 140px; top: 60px; display: flex; align-items: center; gap: 14px; font: 500 28px/1 var(--mono); color: var(--ink-2); }
+.step b { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--ink); color: #fff; font: 600 26px/1 var(--sans); }

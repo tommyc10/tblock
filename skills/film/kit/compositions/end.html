@@ -1,0 +1,43 @@
+<template>
+  <!-- The end card: an ink iris opens over the last shot, the mark lands, then one line, the action and the link.
+       Put the brand's real logo in #SCENE-mark (an <img> from assets/ or its SVG); the wordmark is the fallback. -->
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; }
+    #SCENE-stage { position: absolute; inset: 0; clip-path: circle(0% at 50% 50%); }
+    #SCENE-ground { position: absolute; inset: 0; background: var(--ink); }
+    #SCENE-bloom { position: absolute; left: -10%; right: -10%; bottom: -560px; height: 900px; border-radius: 50%; opacity: 0;
+      background: radial-gradient(ellipse at 50% 50%, rgba(255,196,87,.55), rgba(255,122,69,.42) 30%, rgba(255,77,109,.22) 52%, transparent 70%); filter: blur(40px); }
+    #SCENE-mark { position: absolute; left: 0; width: 1920px; top: 380px; text-align: center; font-weight: 700; font-size: 150px; letter-spacing: -0.06em; color: #fff; }
+    #SCENE-tag { position: absolute; left: 0; width: 1920px; top: 586px; text-align: center; font-size: 34px; color: #a3a3a3; letter-spacing: -0.01em; }
+    #SCENE-cta { position: absolute; left: 0; width: 1920px; top: 660px; display: flex; justify-content: center; }
+    #SCENE-cta .box { font: 500 30px/1 var(--mono); color: #ededed; background: rgba(22,22,22,.9); border: 1px solid #2a2a2a; border-radius: 16px; padding: 22px 30px; box-shadow: 0 24px 60px rgba(0,0,0,.45); white-space: nowrap; }
+    #SCENE-cta .box span { color: var(--accent-solid); margin-right: 16px; }
+    #SCENE-url { position: absolute; left: 0; width: 1920px; top: 782px; text-align: center; font: 500 28px/1 var(--sans); color: #ededed; letter-spacing: -0.01em; }
+  </style>
+  <div id="root" data-composition-id="SCENE" data-width="1920" data-height="1080">
+    <div id="SCENE-stage" class="clip" data-start="0" data-duration="3.8" data-track-index="0">
+      <div id="SCENE-ground"></div>
+      <div id="SCENE-bloom" data-layout-ignore></div>
+      <div id="SCENE-mark">product</div>
+      <div id="SCENE-tag">what it does, in one line</div>
+      <div id="SCENE-cta"><div class="box"><span>$</span>the one command or action</div></div>
+      <div id="SCENE-url">example.com</div>
+    </div>
+  </div>
+  <script type="application/json" id="SCENE-cues">
+    [[0.45, "reveal", "the mark lands", "mark"],
+     [1.55, "appear", "the call to action", "cta"]]
+  </script>
+  <script>
+    (function () {
+      var F = window.FILM, tl = gsap.timeline({ paused: true }), C = F.cues("SCENE");
+      F.iris(tl, "#SCENE-stage", 0);
+      tl.fromTo("#SCENE-mark", { opacity: 0, y: -22, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.62, ease: F.springEase(0.78, 0.42, 0.62) }, C.mark);
+      tl.fromTo("#SCENE-tag", { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.22, ease: "power2.out" }, C.cta - 0.15);
+      tl.fromTo("#SCENE-cta .box", { opacity: 0, scale: 0.94, y: 18 }, { opacity: 1, scale: 1, y: 0, duration: 0.7, ease: F.UI_IN }, C.cta);
+      tl.fromTo("#SCENE-url", { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power2.out" }, C.cta + 0.15);
+      tl.fromTo("#SCENE-bloom", { opacity: 0, y: 220 }, { opacity: 1, y: 0, duration: 2.0, ease: "power2.out" }, C.cta + 0.05);
+      window.__timelines["SCENE"] = tl;
+    })();
+  </script>
+</template>
