@@ -427,7 +427,7 @@ td:first-child { color:var(--fg); font-weight:500; white-space:nowrap; }
         <div class="head">
           <div class="eyebrow">How a run flows</div>
           <h1 id="h-flow">From one prompt to a change you can trust</h1>
-          <p class="lead">Step through a real bug fix. Use the arrow keys or <span class="kbd">J</span> <span class="kbd">K</span> to move.</p>
+          <p class="lead">Step through a real bug fix, where each push, MR and ticket gets its own yes. Use the arrow keys or <span class="kbd">J</span> <span class="kbd">K</span> to move. To go from a ticket to an MR with one yes up front, see <a href="#punch">Punch it</a>.</p>
         </div>
         <div class="flow">
           <div class="steps" id="steps" role="tablist" aria-label="Steps"></div>
@@ -465,6 +465,30 @@ td:first-child { color:var(--fg); font-weight:500; white-space:nowrap; }
           <div class="card stack" style="gap:8px"><span class="pill amber" style="align-self:flex-start">It asks you</span><p style="font-size:13px">Which tickets to create, which one to punch, and the grant for that one branch. From an idea or a ticket, only the grant.</p></div>
           <div class="card stack" style="gap:8px"><span class="pill green" style="align-self:flex-start">Then it just does it</span><p style="font-size:13px">Build, check against the ticket, push this branch, open the MR, fix CI and review threads, and re-check every fix.</p></div>
           <div class="card stack" style="gap:8px"><span class="pill red" style="align-self:flex-start">It never</span><p style="font-size:13px">Merges, turns on auto-merge, force-pushes, pushes another branch or repo, or closes anything.</p></div>
+        </div>
+
+        <div class="stack" style="gap:12px">
+          <div class="sec-head"><h2>Punch it or step by step?</h2><span class="meta">Both run the same playbooks. They differ in how often you're asked.</span></div>
+          <div class="grid g2">
+            <div class="card stack" style="gap:10px">
+              <div class="sec-head"><h3>Punch it</h3><span class="pill green">One yes</span></div>
+              <div class="compare-rows">
+                <div class="c-row"><span class="dot green"></span><div><strong>You can write the criteria up front.</strong> <span>"Add a status filter to GET /orders", not "make search better".</span></div></div>
+                <div class="c-row"><span class="dot green"></span><div><strong>One repo, one branch.</strong> <span>A small or standard change.</span></div></div>
+                <div class="c-row"><span class="dot green"></span><div><strong>Clear of the risky areas.</strong> <span>No auth, personal data, migrations, public contracts or CI config.</span></div></div>
+                <div class="c-row"><span class="dot green"></span><div><strong>It can push before you see the diff.</strong> <span>You still review the MR before it merges.</span></div></div>
+              </div>
+            </div>
+            <div class="card stack" style="gap:10px">
+              <div class="sec-head"><h3>Step by step</h3><span class="pill amber">A yes per action</span></div>
+              <div class="compare-rows">
+                <div class="c-row"><span class="dot amber"></span><div><strong>Risky or cross-repo work.</strong> <span>Say "go deep" for a design sketch and an adversarial review before it ships.</span></div></div>
+                <div class="c-row"><span class="dot amber"></span><div><strong>The design isn't settled.</strong> <span>Prototype or investigate first, then write the ticket.</span></div></div>
+                <div class="c-row"><span class="dot amber"></span><div><strong>You want the diff before the push.</strong> <span>Then ask it to open an MR, and then to babysit it.</span></div></div>
+                <div class="c-row"><span class="dot amber"></span><div><strong>Review needs your call, or there's no ticket.</strong> <span>A contested thread, a spike, or a quick fix.</span></div></div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="card stack" style="gap:12px">
@@ -592,7 +616,8 @@ td:first-child { color:var(--fg); font-weight:500; white-space:nowrap; }
         <div class="grid g2">
           <div class="card stack faq" style="gap:0">
             <details open><summary>Does it use more tokens?</summary><p>Yes, mostly on helpers and review panels. The lean preset keeps that down, and for a one-line edit you can skip tblock-mode. A cheap answer that's wrong costs more once you count the fix.</p></details>
-            <details><summary>Can it push or deploy by itself?</summary><p>No. Pushing, PRs, tickets, deploys and deletes always wait for a clear yes, and a yes covers that one action only.</p></details>
+            <details><summary>Can it push or deploy by itself?</summary><p>No. Pushing, PRs, tickets, deploys and deletes always wait for a clear yes, and a yes covers that one action only. With punch it, you give that yes once, through <code>tblock grant</code>. It covers the ticket, this branch's pushes, the MR and its babysitting for a few hours. It never covers a merge, a force-push, another branch, or a deploy.</p></details>
+            <details><summary>What does punch it need?</summary><p>A forge it can reach: <code>gh</code> for GitHub, or <code>glab</code> or the GitLab MCP server for GitLab. Run <code>/setup-project</code> once so its tickets get your team's labels. Then type <code>/tblock-mode punch it</code> with meeting notes, an idea or a ticket number. <code>punch it #&lt;n&gt;</code> in a new session picks the run up where it stopped.</p></details>
             <details><summary>What if my project has no tests?</summary><p>Its proof is only as good as the checks it can run. It says what it could not check instead of claiming a pass, and it can set up a verification skill for the project.</p></details>
             <details><summary>How do I find the right skill?</summary><p>Ask <code>/tblock-help</code>. It maps what you want to do onto the skill or playbook that does it, and fixes runs that went wrong.</p></details>
           </div>
