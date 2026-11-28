@@ -85,7 +85,7 @@ The default answer is tblock-mode, which runs most of the others when its steps 
 | Have reviewers on different models judge the running UI | [ui-council](../ui-council/SKILL.md) |
 | Work on every state of one component, on a throwaway page | [state-machine](../state-machine/SKILL.md) |
 | Prove a restyle or migration looks exactly the same | the [Visual parity](../tblock-mode/playbooks/visual-parity.md) playbook |
-| Build an animation | [animate](../animate/SKILL.md) |
+| Build an animation | [animate](../animate/SKILL.md), or [better-motion](../better-motion/SKILL.md) for exact durations, easings, and recipes |
 | Time several things that move together: order, stagger, overlap | [choreograph](../choreograph/SKILL.md) |
 | Build a drag, swipe, or flick that feels physical | [gestures](../gestures/SKILL.md) |
 | Name a motion you can see but cannot describe | [animation-vocabulary](../animation-vocabulary/SKILL.md) |
@@ -122,7 +122,7 @@ Close calls:
 - interrogate reviews the diff. blast-radius looks for breakage outside the diff and proves the one fact that makes the change safe.
 - sharpen names what an expert would do, then hands back a rewritten prompt and stops. Send that prompt, usually to tblock-mode, to do the work.
 - interface-review is one agent reviewing the diff against the `better-*` rules. ui-council is several models each opening the running UI through one lens, and it runs interface-review as part of its design system lens.
-- better-layout is for structure: grouping, order, responsive. emil-design-eng and better-ui are for polish: how a component looks, feels, and moves.
+- better-layout is for structure: grouping, order, responsive. emil-design-eng and better-ui are for polish: how a component looks and feels. better-motion is for how it moves.
 - state-machine is a workbench for every state of one component. break-ui stacks worst-case data to find what breaks.
 - prototype builds UI variants behind a picker. The Prototype playbook settles any design or behavior question with a throwaway sketch, and uses prototype for UI.
 

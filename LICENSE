@@ -91,10 +91,10 @@ SOFTWARE.
 
 ---
 
-These skills are Jakub Krehel's, from https://github.com/jakubkrehel/skills (commit 60bf140,
-2026-11-01), included unchanged under his license: interface-review, better-interface,
+These skills are Jakub Krehel's, from https://github.com/jakubkrehel/skills (commit 672ae44,
+2026-11-18), included unchanged under his license: interface-review, better-interface,
 better-layout, better-accessibility, better-writing, better-typography, better-colors,
-better-ui, and state-machine. Each is unchanged except its SKILL.md frontmatter: the
+better-ui, better-motion, and state-machine. Each is unchanged except its SKILL.md frontmatter: the
 description, shortened to tblock's one-line style, and disable-model-invocation: true, so it
 loads through tblock-mode.
 
